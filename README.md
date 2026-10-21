@@ -1,9 +1,10 @@
 # GPU EBSD dictionary indexing on HPC
 
-Generate an EBSD pattern dictionary and match experimental patterns on NVIDIA
-GPUs. This package combines kikuchipy 0.13.1 detector geometry and master-file
-reading with a CuPy projector and batched NCC matcher. Two GPUs share dictionary
-projection and then process separate experimental pattern ranges.
+Generate an EBSD master pattern and dictionary, then match experimental
+patterns on NVIDIA GPUs. The pipeline uses a Python dynamical master generator,
+kikuchipy 0.13.1 detector geometry, a CuPy projector and a batched NCC matcher.
+Two GPUs share the master and dictionary calculations and then process separate
+experimental pattern ranges.
 
 The Python import name remains `emsoft_di`. The repository folder can have any
 name. Upstream EMsoft attribution and license are retained in `LICENSE`.
@@ -15,15 +16,17 @@ The default layout is:
 ```text
 ~/kikuchipyCUDA/
   patterns.up1
-  master.h5
+  master-source.h5                 # EMsoft HDF5 with CrystalData and Monte Carlo accum_z
   scan.ang
   dictionary-indexing-cuda/       # clone this repository here
   KikuchiPyCUDA/                 # Conda environment, created below
 ```
 
-Inputs are raw UP1 experimental patterns, an EMsoft master-pattern HDF5 file,
-and ANG scan coordinates with detector calibration in the header. These inputs
-are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
+Inputs are raw UP1 experimental patterns, an EMsoft HDF5 file with crystal and
+Monte Carlo depth data, and ANG scan coordinates with detector calibration in
+the header. The HDF5 source may also contain a previously generated master; the
+Python stage reads its crystal and Monte Carlo data and writes a new master.
+These inputs are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
 UP1 raster. It is not a generic reader for every vendor scan layout; validate
 the coordinate mapping for your acquisition.
 
@@ -43,9 +46,10 @@ python -m pip install -e '.[hpc]'
 ```
 
 If that environment already exists, activate it and install the editable package;
-do not recreate it. The environment uses Python 3.11, kikuchipy 0.13.1 and
-CuPy 13.6.0 for CUDA 12.x. The system Python module is not needed. On the tested
-compute node, its Python 3.11.4 installation could not find `libffi.so.6`.
+do not recreate it. The environment uses Python 3.11, kikuchipy 0.13.1,
+diffpy.structure and CuPy 13.6.0 for CUDA 12.x. The system Python module is not
+needed. On the tested compute node, its Python 3.11.4 installation could not
+find `libffi.so.6`.
 
 ## 3. Check inputs and run tests
 
@@ -73,7 +77,39 @@ CPU tests can run without GPUs. A skipped CUDA test means GPU execution was not
 validated in that session. The projection test compares against kikuchipy;
 when GPUs are visible it checks them as well. Tests use synthetic data.
 
-## 4. Submit a pilot
+## 4. Generate a master in Python, then index
+
+The full pipeline runs the master-pattern stage before dictionary projection
+and indexing. It uses Python, NumPy, and CuPy on the two allocated GPUs; it does
+not launch EMsoft or require a Fortran runtime. The source HDF5 must contain
+`CrystalData` and `EMData/MCOpenCL/accum_z` (the existing combined MC/master
+file is suitable).
+
+Set the source and experimental input paths, then submit:
+
+```bash
+export KIKUCHIPY_CUDA_MC="$HOME/kikuchipyCUDA/master-source.h5"
+export KIKUCHIPY_CUDA_PATTERNS="$HOME/kikuchipyCUDA/patterns.up1"
+export KIKUCHIPY_CUDA_ANG="$HOME/kikuchipyCUDA/scan.ang"
+sbatch hpc/submit_master_then_index.slurm
+```
+
+The script writes `python-master-JOBID.h5`, then passes it directly to the
+existing GPU dictionary and indexing stage. Defaults generate a 1001 by 1001
+master at all Monte Carlo energy bins, then index all UP1 patterns with a
+1-degree dictionary. This is a large calculation and its runtime can exceed
+the old indexing-only job. For a fast pipeline smoke run, set
+`KIKUCHIPY_CUDA_MASTER_NPX=16` and submit with `--limit 128 --resolution 3`.
+That smaller master is a development output, not a production-quality master.
+`KIKUCHIPY_CUDA_MASTER_DMIN`, `KIKUCHIPY_CUDA_MASTER_BATCH`, and
+`KIKUCHIPY_CUDA_MASTER_MAX_BEAMS` can change the generator settings.
+
+The generated HDF5 identifies itself as a KikuchiCUDA Python master and records
+that scientific validation is incomplete. Compare it with an independently
+generated EMsoft master and validate indexed orientations before relying on
+the result.
+
+## 5. Submit an indexing-only pilot
 
 From the repository directory:
 
@@ -90,7 +126,7 @@ A failed comparison stops the job.
 For another cluster, edit the Slurm partition and resource requests and replace
 the site-specific module names in `hpc/submit_two_gpu.slurm`.
 
-## 5. Submit all points
+## 6. Submit all points from an existing master
 
 After reviewing the pilot:
 
@@ -112,7 +148,7 @@ export KIKUCHIPY_CUDA_ENV=/path/to/conda-environment
 sbatch hpc/submit_two_gpu.slurm --limit 0 --resolution 1
 ```
 
-## 6. Monitor and verify
+## 7. Monitor and verify
 
 Replace `JOBID` with the number printed by `sbatch`:
 
@@ -127,7 +163,7 @@ root in `dictionary-run-JOBID/`. A successful run publishes `indexed.h5` only
 after validating and merging the GPU shards. Existing output directories and
 final results are not overwritten. Intermediate files remain for diagnosis.
 
-## 7. Read the output
+## 8. Read the output
 
 This is a custom results HDF5 file, not an OIM-compatible export. Key datasets:
 

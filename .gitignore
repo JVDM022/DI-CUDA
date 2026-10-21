@@ -16,6 +16,8 @@ KikuchiPyCUDA*/
 *.up2
 *.h5
 *.hdf5
+*.h5.partial
+*.h5.work/
 *.ang
 *.npy
 *.npz
@@ -24,4 +26,9 @@ dictionary-run-*/
 data/
 results/
 *_MTEX_plots/
+
+# Local native/Fortran-host experiment; the published workflow is Python/CuPy.
+/native/
+/tools/prepare_emsoft_cuda.py
+/src/emsoft_di/dynamics.py
 

@@ -181,12 +181,19 @@ energy weights for multiple energy bins. Single-energy maps can also be used.
 Detector weights can vary by pixel. The generator yields GPU arrays by default;
 transfer batches to host before passing them to the current matcher API.
 
-This is a partial port, **not the complete EMEBSDDI pipeline**.
-The matcher requires a dictionary; the projection API can generate its patterns
-from supplied master arrays and rotations. It does not generate master
-patterns, perform orientation refinement, read
-UP1/OSC/ANG directly, or emit vendor scan maps. Scan coordinates, phase data,
-detector calibration, and orientation conventions remain caller responsibilities.
+The package also contains a Python dynamical master generator in
+`src/emsoft_di/master/`. It reads crystal and Monte Carlo depth data from an
+EMsoft HDF5 file, computes dynamical diffraction with NumPy and CuPy, and writes
+a master HDF5 that the HPC dictionary pipeline can load. Run it with
+`python -m emsoft_di.master --help`; `hpc/submit_master_then_index.slurm`
+places it before dictionary generation and indexing. Crystal parsing, scattering
+factors, reflection selection and matrix assembly run in Python on the CPU;
+depth propagation and intensity integration run in CuPy on the allocated GPUs.
+
+The generated master is marked scientifically unvalidated. The Python
+implementation must be compared with an independent EMsoft master and checked
+against experimental patterns before scientific interpretation. It does not
+perform orientation refinement or emit vendor scan maps.
 
 EMsoft applies configurable processing, including high-pass filtering,
 adaptive histogram equalization, binning, and masking, before matching.

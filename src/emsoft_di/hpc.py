@@ -67,6 +67,11 @@ def load_master(path, mode):
     import h5py
     import kikuchipy as kp
     with h5py.File(path, 'r') as f:
+        is_python_master = 'kikuchicuda_master_schema' in f.attrs
+    if is_python_master:
+        from .master.reader import load_python_master
+        return load_python_master(path, mode)
+    with h5py.File(path, 'r') as f:
         energies = f['EMData/EBSDmaster/EkeVs'][...].reshape(-1)
         weighted = bool(f['NMLparameters/EBSDMasterNameList/useEnergyWeighting'][0])
         voltage = float(f['NMLparameters/MCCLNameList/EkeV'][0])
