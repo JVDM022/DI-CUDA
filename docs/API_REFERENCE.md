@@ -187,8 +187,9 @@ EMsoft HDF5 file, computes dynamical diffraction with NumPy and CuPy, and writes
 a master HDF5 that the HPC dictionary pipeline can load. Run it with
 `python -m emsoft_di.master --help`; `hpc/submit_master_then_index.slurm`
 places it before dictionary generation and indexing. Crystal parsing, scattering
-factors, reflection selection and matrix assembly run in Python on the CPU;
-depth propagation and intensity integration run in CuPy on the allocated GPUs.
+factor lookup and static table construction run in Python on the CPU. CuPy on
+the allocated GPUs handles per-direction reflection selection, dynamical-matrix
+assembly, depth propagation and intensity integration in batches.
 
 The generated master is marked scientifically unvalidated. The Python
 implementation must be compared with an independent EMsoft master and checked

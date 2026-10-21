@@ -129,6 +129,7 @@ class Lookup:
         self.potential[origin] = 0
         if not np.isfinite(self.potential).all() or not np.isfinite(self.sgh).all() or self.absorption0 < 0:
             raise ValueError('Scattering calculation produced invalid values')
+        self._device_cache = {}
 
     def index(self, hkl):
         hkl = np.asarray(hkl, dtype=int)
@@ -136,6 +137,138 @@ class Lookup:
         if np.any(shifted < 0) or np.any(shifted >= np.array(self.shape)):
             raise ValueError('Requested reciprocal vector exceeds the lookup range')
         return np.ravel_multi_index(shifted.T, self.shape)
+
+    def _cuda_arrays(self, xp, batch_size):
+        """Upload fixed crystal tables and cache pair potentials on one GPU."""
+        device = int(xp.cuda.runtime.getDevice())
+        cached = self._device_cache.get(device)
+        if cached is not None:
+            return cached
+
+        hkl = xp.asarray(self.hkl, dtype=xp.int32)
+        g = xp.asarray(self.g, dtype=xp.float64)
+        potential = xp.asarray(self.potential, dtype=xp.complex128)
+        sgh = xp.asarray(self.sgh, dtype=xp.complex128)
+        count = len(self.hkl)
+        pair_bytes = count * count * np.dtype(np.complex128).itemsize
+        classification_bytes = (batch_size + 2) * count * count * np.dtype(np.float64).itemsize
+        free_bytes, _ = xp.cuda.runtime.memGetInfo()
+        if pair_bytes + classification_bytes > free_bytes * 0.55:
+            raise MemoryError(
+                f'GPU reflection tables and selection workspace need about '
+                f'{(pair_bytes + classification_bytes) / 1e9:.2f} GB; '
+                'reduce direction_batch or increase dmin'
+            )
+
+        pair_potential = xp.empty((count, count), dtype=xp.complex128)
+        limits = xp.asarray(self.limits, dtype=xp.int32)
+        strides = (self.shape[1] * self.shape[2], self.shape[2], 1)
+        rows_per_chunk = max(1, min(128, int(2**20 // max(count, 1))))
+        columns = hkl[None, :, :]
+        for start in range(0, count, rows_per_chunk):
+            stop = min(start + rows_per_chunk, count)
+            difference = hkl[start:stop, None, :] - columns
+            shifted = difference + 2 * limits
+            flat = (shifted[..., 0] * strides[0] +
+                    shifted[..., 1] * strides[1] + shifted[..., 2])
+            pair_potential[start:stop] = potential[flat]
+
+        structure_potential = potential[xp.asarray(self.index(self.hkl), dtype=xp.int64)]
+        cached = dict(hkl=hkl, g=g, potential=potential, sgh=sgh,
+                      structure_potential=structure_potential,
+                      pair_potential=pair_potential)
+        self._device_cache[device] = cached
+        return cached
+
+    def matrices_batch(self, directions, *, xp, max_beams=512,
+                       bethe=(4., 8., 50., 1.)):
+        """Build batched dynamical matrices for a direction batch on the GPU.
+
+        Directions have variable strong/weak beam counts. The strong beams
+        are packed to the largest strong-beam count in this batch. The weak-beam
+        Bethe correction is reduced over the full candidate list on-device.
+        """
+        table = self._cuda_arrays(xp, len(directions))
+        hkl, g = table['hkl'], table['g']
+        pair = table['pair_potential']
+        structure = table['structure_potential']
+        sgh = table['sgh']
+        rays = xp.asarray(directions, dtype=xp.float64)
+        rays /= xp.linalg.norm(rays, axis=1, keepdims=True)
+        k = rays / self.wavelength
+        denominator = 2 * xp.sum((k[:, None, :] + g[None, :, :]) * rays[:, None, :], axis=2)
+        numerator = -xp.sum(g[None, :, :] * (2 * k[:, None, :] + g[None, :, :]), axis=2)
+        excitation = xp.divide(numerator, denominator,
+            out=xp.full_like(numerator, xp.inf), where=xp.abs(denominator) > 1e-12)
+        excitation[:, 0] = 0
+
+        zero_potential = xp.abs(structure) <= 1e-10
+        ratio = xp.divide(xp.abs(excitation) / self.wavelength, xp.abs(structure)[None, :],
+            out=xp.full_like(excitation, xp.inf), where=(~zero_potential)[None, :])
+        selected = xp.where(zero_potential[None, :],
+                            xp.abs(excitation) <= bethe[3], ratio <= bethe[2])
+        selected[:, 0] = True
+
+        pair_abs = xp.abs(pair)
+        beam_ratio = xp.divide(
+            (xp.abs(excitation) / self.wavelength)[:, :, None], pair_abs[None, :, :],
+            out=xp.full((len(rays), len(hkl), len(hkl)), xp.inf, dtype=xp.float64),
+            where=pair_abs[None, :, :] > 1e-10,
+        )
+        xp.copyto(beam_ratio, xp.inf, where=~selected[:, None, :])
+        minimum_ratio = xp.min(beam_ratio, axis=2)
+        strong = selected & (minimum_ratio <= bethe[0])
+        strong[:, 0] = True
+        weak = selected & (minimum_ratio > bethe[0]) & (minimum_ratio <= bethe[1])
+        strong_count = xp.sum(strong, axis=1).astype(xp.int32)
+        weak_count = xp.sum(weak, axis=1).astype(xp.int32)
+        maximum = int(xp.max(strong_count).get())
+        if maximum > max_beams:
+            raise ValueError(
+                f'{maximum} strong beams exceeds max_beams={max_beams}; '
+                'increase the limit explicitly; no beams were discarded'
+            )
+
+        count = len(hkl)
+        row = xp.arange(count, dtype=xp.int32)[None, :]
+        # The incident (000) beam must occupy matrix row zero for propagation.
+        order = xp.argsort(
+            xp.where(strong & (row != 0), row + 1, count + 1), axis=1
+        )[:, :maximum - 1]
+        order = xp.concatenate((xp.zeros((len(rays), 1), dtype=xp.int32), order), axis=1)
+        width = maximum
+        packed_count = xp.minimum(strong_count, width)
+        active = xp.arange(width)[None, :] < packed_count[:, None]
+        beam_hkl = hkl[order]
+        beam_excitation = excitation[xp.arange(len(rays))[:, None], order]
+        active_pair = active[:, :, None] & active[:, None, :]
+        dynamic = xp.where(active_pair, pair[order[:, :, None], order[:, None, :]], 0)
+        diagonal = 2 * beam_excitation / self.wavelength + 1j * self.absorption0
+        dynamic[:, xp.arange(width), xp.arange(width)] = xp.where(active, diagonal, 0)
+
+        all_beams = xp.arange(count, dtype=xp.int32)
+        left = pair[order[:, :, None], all_beams[None, None, :]]
+        right = pair[all_beams[None, :, None], order[:, None, :]]
+        if bool(xp.any(weak & (xp.abs(excitation) < 1e-14))):
+            raise ValueError('Zero excitation error in weak-beam denominator')
+        inv_excitation = xp.where(weak, 1 / xp.where(weak, excitation, 1), 0)
+        correction = 0.5 * self.wavelength * (
+            (left * inv_excitation[:, None, :]) @ right
+        )
+        diagonal_correction = 0.5 * self.wavelength * xp.sum(
+            xp.where(weak[:, None, :], xp.abs(left) ** 2 /
+                     xp.where(weak[:, None, :], excitation[:, None, :], 1), 0), axis=2)
+        correction[:, xp.arange(width)] = diagonal_correction
+        correction *= active_pair
+        dynamic -= correction
+
+        difference = beam_hkl[:, :, None, :] - beam_hkl[:, None, :, :]
+        shifted = difference + 2 * xp.asarray(self.limits, dtype=xp.int32)
+        flat = (shifted[..., 0] * self.shape[1] * self.shape[2] +
+                shifted[..., 1] * self.shape[2] + shifted[..., 2])
+        site = sgh[:, flat].transpose(1, 0, 2, 3)
+        site *= active[:, None, :, None] & active[:, None, None, :]
+        return dynamic, site, strong_count, weak_count
 
     def matrices(self, direction, *, c1=4., c2=8., c3=50., sg_cutoff=1., max_beams=512):
         """Reflection selection, Bethe corrections and Sgh (EMsoft conventions)."""
@@ -223,6 +356,21 @@ def integrate_lgh(matrices, wavelength, depth_step, weights, thickness, *, xp=np
 
 def simulate_batch(lookup, directions, depth_step, weights, thickness, *, xp=np, max_beams=512,
                    bethe=(4., 8., 50., 1.)):
+    if xp is not np:
+        dynamic, site, strong, weak = lookup.matrices_batch(
+            directions, xp=xp, max_beams=max_beams, bethe=bethe
+        )
+        lgh = integrate_lgh(dynamic, lookup.wavelength, depth_step, weights, thickness, xp=xp)
+        value = xp.real(xp.sum(lgh[:, None, :, :] * site, axis=(-2, -1)))
+        value /= len(lookup.crystal.positions)
+        value = xp.asnumpy(value)
+        if not np.isfinite(value).all() or value.min() < -1e-8*max(1., float(abs(value).max())):
+            raise ValueError('Dynamical propagation produced nonfinite or negative intensity')
+        counts = xp.asnumpy(xp.stack((strong, weak), axis=1))
+        return np.maximum(value, 0), [
+            dict(strong=int(row[0]), weak=int(row[1])) for row in counts
+        ]
+
     prepared = [lookup.matrices(ray, max_beams=max_beams, c1=bethe[0], c2=bethe[1],
                  c3=bethe[2], sg_cutoff=bethe[3]) for ray in directions]
     n = max(len(a) for a, _, _ in prepared)
