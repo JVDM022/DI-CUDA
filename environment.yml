@@ -1,0 +1,11 @@
+name: KikuchiPyCUDA
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy=2.3
+  - pip:
+      - kikuchipy==0.13.1
+      - h5py>=3.8
+      - cupy-cuda12x==13.6.0
