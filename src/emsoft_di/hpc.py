@@ -62,6 +62,63 @@ def preprocess(data, binning, sigma):
     return np.ascontiguousarray(data, dtype=np.float32)
 
 
+def scan_layout(ang_path, calibration, pattern_count):
+    """Map ANG scan coordinates onto UP pattern indices and hex-grid slots."""
+    rows = np.loadtxt(ang_path, comments='#', usecols=(3, 4), ndmin=2)
+    x, y = rows.T
+    dx, dy = calibration['XSTEP'], calibration['YSTEP']
+    row = np.rint((y-y.min())/dy).astype(int)
+    col_float = (x-x.min())/dx - 0.5*(row % 2)
+    col = np.rint(col_float).astype(int)
+    if not np.allclose(col_float, col, atol=1e-3):
+        raise ValueError('ANG coordinates do not match expected alternating hex rows')
+    nrows = row.max()+1
+    if pattern_count % nrows:
+        raise ValueError('UP count is not a whole number of raster rows')
+    width = pattern_count // nrows
+    ix = row*width + col
+    if np.any(col < 0) or np.any(col >= width) or np.any(ix >= pattern_count) or len(np.unique(ix)) != len(ix):
+        raise ValueError('ANG-to-UP mapping has invalid or duplicate indices')
+    return rows, row, col, ix, nrows, width
+
+
+def build_npa_neighbors(row, col, pattern_index, nrows, width, pattern_count,
+                        x_step, y_step):
+    """Return center + six nearest hex-scan neighbors for each UP pattern."""
+    slots = np.full((nrows, width), -1, dtype=np.int64)
+    slots[row, col] = pattern_index
+    neighbors = np.full((pattern_count, 7), -1, dtype=np.int64)
+    # Patterns absent from the ANG coordinate table stay unchanged.
+    neighbors[:, 0] = np.arange(pattern_count)
+    for r, c, center in zip(row, col, pattern_index):
+        found = [int(center)]
+        x_center = c + 0.5 * (r % 2)
+        for rr in range(max(0, r-1), min(nrows, r+2)):
+            for cc in range(max(0, c-1), min(width, c+2)):
+                other = int(slots[rr, cc])
+                if other < 0 or other == center:
+                    continue
+                delta_x = (cc + 0.5 * (rr % 2) - x_center) * x_step
+                delta_y = (rr-r) * y_step
+                if delta_x*delta_x + delta_y*delta_y <= x_step*x_step*1.001:
+                    found.append(other)
+        neighbors[center, :len(found)] = found
+    return neighbors
+
+
+def preprocess_with_npa(raw, indices, binning, sigma, neighbor_indices):
+    """Preprocess patterns, then average each with its mapped scan neighbors."""
+    neighbors = neighbor_indices[indices]
+    present = neighbors >= 0
+    safe = np.where(present, neighbors, indices[:, None])
+    prepared = preprocess(raw[safe.reshape(-1)], binning, sigma)
+    prepared = prepared.reshape(len(indices), neighbors.shape[1], *prepared.shape[1:])
+    weights = present[:, :, None, None]
+    return np.ascontiguousarray(
+        (prepared * weights).sum(axis=1) / present.sum(axis=1)[:, None, None],
+        dtype=np.float32)
+
+
 def load_master(path, mode):
     """Use kikuchipy's reader to retain master axis conventions and phase."""
     import h5py
@@ -197,6 +254,8 @@ def match_worker(options, device_id, start, stop):
     output = Path(options['output'])
     raw = read_up(options['patterns'])
     dictionary = np.load(output / 'dictionary.npy', mmap_mode='r')
+    neighbor_indices = (np.load(output / 'npa_neighbors.npy', mmap_mode='r')
+                       if options['npa'] else None)
     k = min(options['keep_n'], len(dictionary))
     shard = output / f'gpu-{device_id}.h5'
     with cp.cuda.Device(device_id), h5py.File(shard, 'x') as f:
@@ -206,7 +265,11 @@ def match_worker(options, device_id, start, stop):
         valid_ds = f.create_dataset('valid', (stop-start,), dtype='?')
         for a in range(start, stop, options['pattern_batch']):
             b = min(a + options['pattern_batch'], stop)
-            block = preprocess(raw[a:b], options['binning'], options['background_sigma'])
+            if neighbor_indices is None:
+                block = preprocess(raw[a:b], options['binning'], options['background_sigma'])
+            else:
+                block = preprocess_with_npa(raw, np.arange(a, b), options['binning'],
+                    options['background_sigma'], neighbor_indices)
             flat = block.reshape(len(block), -1)
             centered = flat - flat.mean(axis=1, keepdims=True)
             valid = np.isfinite(flat).all(1) & (np.linalg.norm(centered, axis=1) > 0)
@@ -225,22 +288,8 @@ def match_worker(options, device_id, start, stop):
 
 def add_scan_mapping(f, args, count, calibration):
     # This dataset uses the previously validated OIM row-stride mapping.
-    rows = np.loadtxt(args.ang, comments='#', usecols=(3, 4), ndmin=2)
-    x, y = rows.T
-    dx, dy = calibration['XSTEP'], calibration['YSTEP']
-    row = np.rint((y-y.min())/dy).astype(int)
-    col_float = (x-x.min())/dx - 0.5*(row % 2)
-    col = np.rint(col_float).astype(int)
-    if not np.allclose(col_float, col, atol=1e-3):
-        raise ValueError('ANG coordinates do not match expected alternating hex rows')
-    nrows = row.max()+1
     full_count = read_up(args.patterns).shape[0]
-    if full_count % nrows:
-        raise ValueError('UP count is not a whole number of raster rows')
-    width = full_count // nrows
-    ix = row*width + col
-    if np.any(col < 0) or np.any(col >= width) or np.any(ix >= full_count) or len(np.unique(ix)) != len(ix):
-        raise ValueError('ANG-to-UP mapping has invalid or duplicate indices')
+    rows, row, col, ix, _, _ = scan_layout(args.ang, calibration, full_count)
     group = f.create_group('ang_mapping')
     group.create_dataset('pattern_index', data=ix)
     group.create_dataset('xy_um', data=rows)
@@ -297,6 +346,8 @@ def main():
     parser.add_argument('--resolution', type=float, default=3.0, help='Orientation sampling degrees; 3 is a coarse pilot')
     parser.add_argument('--binning', type=int, default=2)
     parser.add_argument('--background-sigma', type=float, default=3., help='Gaussian subtraction sigma in binned pixels; 0 disables')
+    parser.add_argument('--npa', action='store_true',
+                        help='Average each experimental pattern with its six nearest hex-grid scan neighbors')
     parser.add_argument('--energy-mode', choices=('mc-global', 'highest-bin'), default='mc-global')
     parser.add_argument('--keep-n', type=int, default=20)
     parser.add_argument('--pattern-batch', type=int, default=128)
@@ -331,6 +382,12 @@ def main():
     args.output.mkdir(parents=True)
     options = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     options['run_id'] = hashlib.sha256(os.urandom(32)).hexdigest()
+    if args.npa:
+        _, row, col, ix, nrows, width = scan_layout(args.ang, calibration, len(raw))
+        neighbors = build_npa_neighbors(row, col, ix, nrows, width, len(raw),
+                                        calibration['XSTEP'], calibration['YSTEP'])
+        np.save(args.output/'npa_neighbors.npy', neighbors)
+        print('NPA enabled: equal-weight average of each pattern and its available six nearest hex-grid neighbors', flush=True)
     metadata = dict(options)
     metadata.update(build_dictionary(args, args.output, raw, calibration))
     (args.output/'run.json').write_text(json.dumps(metadata, indent=2))

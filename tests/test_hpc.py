@@ -5,7 +5,8 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 import numpy as np
-from emsoft_di.hpc import read_up, preprocess, add_scan_mapping, merge
+from emsoft_di.hpc import (read_up, preprocess, preprocess_with_npa,
+    build_npa_neighbors, add_scan_mapping, merge)
 
 
 class HPCTests(unittest.TestCase):
@@ -25,6 +26,17 @@ class HPCTests(unittest.TestCase):
         together = preprocess(data, 2, 1)
         separate = np.concatenate([preprocess(data[i:i+1], 2, 1) for i in range(2)])
         np.testing.assert_array_equal(together, separate)
+
+    def test_npa_uses_center_and_six_nearest_hex_neighbors(self):
+        row, col = np.indices((3, 3))
+        row, col = row.ravel(), col.ravel()
+        pattern_index = row * 3 + col
+        neighbors = build_npa_neighbors(row, col, pattern_index, 3, 3, 9, 1., np.sqrt(3)/2)
+        self.assertEqual(np.count_nonzero(neighbors[4] >= 0), 7)
+        self.assertEqual(np.count_nonzero(neighbors[0] >= 0), 3)
+        data = np.arange(9, dtype=np.uint8).reshape(9, 1, 1)
+        averaged = preprocess_with_npa(data, np.array([4]), 1, 0, neighbors)
+        np.testing.assert_allclose(averaged[0, 0, 0], 30/7)
 
     @unittest.skipUnless(importlib.util.find_spec('h5py'), 'h5py unavailable')
     def test_merge_retains_blank_rows_and_mapping_and_rejects_overwrite(self):

@@ -26,7 +26,11 @@ Inputs are raw UP1 experimental patterns, an EMsoft HDF5 file with crystal and
 Monte Carlo depth data, and ANG scan coordinates with detector calibration in
 the header. The HDF5 source may also contain a previously generated master; the
 Python stage reads its crystal and Monte Carlo data and writes a new master.
-These inputs are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
+The full pipeline also exports a self-contained HTML heat map from
+`EMData/MCOpenCL/accum_z`, showing electron counts through depth (`z`) bins at
+each incident energy. Counts are summed over the Monte Carlo x-y bins, displayed
+with a logarithmic color scale, and reported as raw counts on hover. These inputs
+are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
 UP1 raster. It is not a generic reader for every vendor scan layout; validate
 the coordinate mapping for your acquisition.
 
@@ -95,7 +99,12 @@ sbatch hpc/submit_master_then_index.slurm
 ```
 
 The script writes `python-master-JOBID.h5`, then passes it directly to the
-existing GPU dictionary and indexing stage. Defaults generate a 1001 by 1001
+existing GPU dictionary and indexing stage. It also writes the interactive
+electron-penetration heat map to
+`$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-JOBID.html`; open that HTML file in
+a browser after the export. The heat-map horizontal axis is depth in nm, the
+vertical axis is incident energy in keV, and color is the total count summed
+over x-y at each depth and energy. Defaults generate a 1001 by 1001
 master at all Monte Carlo energy bins, then index all UP1 patterns with a
 1-degree dictionary. This is a large calculation and its runtime can exceed
 the old indexing-only job. For a fast pipeline smoke run, set
@@ -103,6 +112,15 @@ the old indexing-only job. For a fast pipeline smoke run, set
 That smaller master is a development output, not a production-quality master.
 `KIKUCHIPY_CUDA_MASTER_DMIN`, `KIKUCHIPY_CUDA_MASTER_BATCH`, and
 `KIKUCHIPY_CUDA_MASTER_MAX_BEAMS` can change the generator settings.
+
+To export the heat map from an existing OpenCL Monte Carlo file without running
+master generation or indexing, run this from the repository directory:
+
+```bash
+python -m emsoft_di.master.volume \
+  --monte-carlo "$HOME/emsoft-port/data/EMMCopenCL_MCMP.h5" \
+  --output "$HOME/kikuchipyCUDA/monte-carlo-penetration.html"
+```
 
 The generated HDF5 identifies itself as a KikuchiCUDA Python master and records
 that scientific validation is incomplete. Compare it with an independently
@@ -139,6 +157,26 @@ approximately 1-degree resolution; it does not promise 1-degree accuracy.
 There is no orientation refinement. Large dictionaries require substantial disk
 space; the job prints their size before generation. Every run generates its own
 dictionary; dictionary reuse and automatic resume are not implemented.
+
+The `--resolution` value is the requested angular spacing, in degrees, passed
+to orix's cubochoric fundamental-zone sampler. Use a smaller value for a denser
+dictionary and a larger value for a smaller, coarser dictionary. The resulting
+orientation spacing is approximate because of the sampler grid and crystal
+symmetry; it is not an indexing accuracy or error bound. For example,
+`--resolution 2` requests about 2-degree sampling.
+
+To enable neighbour pattern averaging (NPA) for the experimental patterns, add
+`--npa`:
+
+```bash
+sbatch hpc/submit_two_gpu.slurm --limit 0 --resolution 1 --npa
+```
+
+NPA averages each preprocessed pattern equally with its available six nearest
+neighbours on the alternating-hex ANG scan grid. Edge and missing scan points
+use only the available patterns. This may improve pattern signal quality, but
+it increases the effective interaction area and can reduce spatial resolution.
+It is off by default; runs without `--npa` keep indexing patterns separately.
 
 For a different data root or environment:
 

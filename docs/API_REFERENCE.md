@@ -191,6 +191,12 @@ factor lookup and static table construction run in Python on the CPU. CuPy on
 the allocated GPUs handles per-direction reflection selection, dynamical-matrix
 assembly, depth propagation and intensity integration in batches.
 
+`python -m emsoft_di.master.volume --monte-carlo INPUT.h5 --output OUTPUT.html`
+exports a self-contained interactive heat map from `EMData/MCOpenCL/accum_z`.
+It sums counts across x and y, then plots log-scaled electron counts by depth
+bin (z, in nm) and incident energy; hovering shows the unscaled count. This
+heat-map export is also included in `hpc/submit_master_then_index.slurm`.
+
 The generated master is marked scientifically unvalidated. The Python
 implementation must be compared with an independent EMsoft master and checked
 against experimental patterns before scientific interpretation. It does not
