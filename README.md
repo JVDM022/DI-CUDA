@@ -107,20 +107,57 @@ vertical axis is incident energy in keV, and color is the total count summed
 over x-y at each depth and energy. Defaults generate a 1001 by 1001
 master at all Monte Carlo energy bins, then index all UP1 patterns with a
 1-degree dictionary. This is a large calculation and its runtime can exceed
-the old indexing-only job. For a fast pipeline smoke run, set
-`KIKUCHIPY_CUDA_MASTER_NPX=16` and submit with `--limit 128 --resolution 3`.
-That smaller master is a development output, not a production-quality master.
+the old indexing-only job. The `--resolution` value controls the requested
+orientation spacing in degrees. For example, to use approximately 1-degree
+sampling for the full scan:
+
+```bash
+sbatch hpc/submit_master_then_index.slurm --resolution 1
+```
+
+The spacing is approximate because the cubochoric sampler grid and crystal
+symmetry affect the resulting orientations; it is not a guarantee of
+1-degree indexing accuracy. Smaller values create denser, more expensive
+dictionaries. For a fast pipeline smoke run, use a coarse 3-degree dictionary
+and a small development master:
+
+```bash
+KIKUCHIPY_CUDA_MASTER_NPX=16 sbatch hpc/submit_master_then_index.slurm \
+  --limit 128 --resolution 3
+```
+
+To enable neighbour pattern averaging (NPA) on the combined pipeline, add
+`--npa`:
+
+```bash
+sbatch hpc/submit_master_then_index.slurm --resolution 1 --npa
+```
+
+NPA averages each preprocessed pattern with its available six nearest
+neighbours on the alternating-hex ANG scan grid. It may improve signal quality,
+but increases the effective interaction area and can reduce spatial
+resolution. NPA is off by default.
+
+The small master in the smoke run is for development checks, not production.
 `KIKUCHIPY_CUDA_MASTER_DMIN`, `KIKUCHIPY_CUDA_MASTER_BATCH`, and
 `KIKUCHIPY_CUDA_MASTER_MAX_BEAMS` can change the generator settings.
 
-To export the heat map from an existing OpenCL Monte Carlo file without running
-master generation or indexing, run this from the repository directory:
+To export the interactive electron-penetration volume heat map from an existing
+OpenCL Monte Carlo file without running master generation or indexing, run this
+from the repository directory:
 
 ```bash
 python -m emsoft_di.master.volume \
   --monte-carlo "$HOME/emsoft-port/data/EMMCopenCL_MCMP.h5" \
   --output "$HOME/kikuchipyCUDA/monte-carlo-penetration.html"
 ```
+
+The standalone exporter writes a self-contained HTML volume heat map. It sums
+`accum_z` electron counts over x-y, plots depth in nm against incident energy
+in keV, and uses a logarithmic color scale; hover over a cell to see its raw
+count. Open the HTML file in a browser to zoom and inspect penetration through
+the depth bins. The combined pipeline exports the same interactive heat map
+automatically alongside the indexing results.
 
 The generated HDF5 identifies itself as a KikuchiCUDA Python master and records
 that scientific validation is incomplete. Compare it with an independently
