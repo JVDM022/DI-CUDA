@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KikuchiCUDA crystal map</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #111418;
+      --panel: #1b2027;
+      --cell: #626b77;
+      --cell-border: #252b33;
+      --green: #22c55e;
+      --text: #f3f5f7;
+      --muted: #b5bdc8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1280px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+    p { color: var(--muted); margin: 0 0 16px; }
+    a { color: #8bd3ff; }
+    .legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 20px 0 14px; color: var(--muted); }
+    .key { display: inline-flex; align-items: center; gap: 8px; }
+    .swatch { width: 15px; height: 15px; border: 1px solid #ffffff33; border-radius: 2px; }
+    .swatch.created { background: var(--green); }
+    .swatch.missing { background: var(--cell); }
+    .table-wrap { overflow-x: auto; padding: 8px 2px 16px; }
+    .periodic-table {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(50px, 1fr));
+      gap: 4px;
+      min-width: 990px;
+    }
+    .element {
+      position: relative;
+      min-height: 64px;
+      padding: 5px 6px;
+      border: 1px solid var(--cell-border);
+      border-radius: 3px;
+      background: var(--cell);
+      color: white;
+      text-decoration: none;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .element:hover, .element:focus-visible { filter: brightness(1.2); transform: translateY(-2px); outline: 2px solid white; z-index: 1; }
+    .element.created { background: #138a3e; border-color: #35dc76; }
+    .number { display: block; font-size: 10px; line-height: 1.1; opacity: .82; }
+    .symbol { display: block; margin-top: 4px; font-size: 20px; font-weight: 750; line-height: 1; }
+    .name { display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+    .created-mark { position: absolute; top: 4px; right: 5px; font-size: 9px; font-weight: 800; }
+    .series-label { grid-column: 1 / 4; color: var(--muted); align-self: center; padding-left: 4px; font-size: 12px; }
+    .details {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border: 1px solid #3a424d;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+    .details h2 { margin: 0 0 8px; font-size: 1.15rem; }
+    .details p { margin: 0 0 10px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 14px; }
+    footer { margin-top: 20px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 600px) { body { padding: 18px 12px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>KikuchiCUDA crystal map</h1>
+  <p>Green means a crystal file has been created in this repository. Gray means none has been added yet; select it to search COD for structures containing that element.</p>
+  <div class="legend" aria-label="Map legend">
+    <span class="key"><span class="swatch created"></span>Created crystal file</span>
+    <span class="key"><span class="swatch missing"></span>No crystal file yet · click to search COD</span>
+  </div>
+  <div class="table-wrap">
+    <div class="periodic-table" id="periodic-table" aria-label="Periodic table"></div>
+  </div>
+  <section class="details" aria-live="polite">
+    <h2>Nickel (Ni) · fcc example</h2>
+    <p>This is the worked fcc-Ni example from the EMsoft crystal-data tutorial: cubic, a = 0.35236 nm, space group 225, Ni at (0, 0, 0), occupancy 1, and B = 0.0035 nm².</p>
+    <div class="actions">
+      <a href="../examples/crystals/Ni.xtal" download>Download Ni.xtal</a>
+      <a href="../examples/crystals/Ni.json" download>Download Ni.json input</a>
+      <a href="https://github.com/EMsoft-org/EMsoft/wiki/Crystal-Data-Entry-Example">EMsoft source example</a>
+    </div>
+  </section>
+  <footer>Gray-cell COD links search for crystal records that contain the selected element, including compounds. COD results can include multiple phases and temperatures; check the record against your sample before using it.</footer>
+</main>
+<script>
+  const elements = [
+    ['H','Hydrogen',1,1,1],['He','Helium',2,18,1],
+    ['Li','Lithium',3,1,2],['Be','Beryllium',4,2,2],['B','Boron',5,13,2],['C','Carbon',6,14,2],['N','Nitrogen',7,15,2],['O','Oxygen',8,16,2],['F','Fluorine',9,17,2],['Ne','Neon',10,18,2],
+    ['Na','Sodium',11,1,3],['Mg','Magnesium',12,2,3],['Al','Aluminium',13,13,3],['Si','Silicon',14,14,3],['P','Phosphorus',15,15,3],['S','Sulfur',16,16,3],['Cl','Chlorine',17,17,3],['Ar','Argon',18,18,3],
+    ['K','Potassium',19,1,4],['Ca','Calcium',20,2,4],['Sc','Scandium',21,3,4],['Ti','Titanium',22,4,4],['V','Vanadium',23,5,4],['Cr','Chromium',24,6,4],['Mn','Manganese',25,7,4],['Fe','Iron',26,8,4],['Co','Cobalt',27,9,4],['Ni','Nickel',28,10,4],['Cu','Copper',29,11,4],['Zn','Zinc',30,12,4],['Ga','Gallium',31,13,4],['Ge','Germanium',32,14,4],['As','Arsenic',33,15,4],['Se','Selenium',34,16,4],['Br','Bromine',35,17,4],['Kr','Krypton',36,18,4],
+    ['Rb','Rubidium',37,1,5],['Sr','Strontium',38,2,5],['Y','Yttrium',39,3,5],['Zr','Zirconium',40,4,5],['Nb','Niobium',41,5,5],['Mo','Molybdenum',42,6,5],['Tc','Technetium',43,7,5],['Ru','Ruthenium',44,8,5],['Rh','Rhodium',45,9,5],['Pd','Palladium',46,10,5],['Ag','Silver',47,11,5],['Cd','Cadmium',48,12,5],['In','Indium',49,13,5],['Sn','Tin',50,14,5],['Sb','Antimony',51,15,5],['Te','Tellurium',52,16,5],['I','Iodine',53,17,5],['Xe','Xenon',54,18,5],
+    ['Cs','Caesium',55,1,6],['Ba','Barium',56,2,6],['La','Lanthanum',57,3,6],['Hf','Hafnium',72,4,6],['Ta','Tantalum',73,5,6],['W','Tungsten',74,6,6],['Re','Rhenium',75,7,6],['Os','Osmium',76,8,6],['Ir','Iridium',77,9,6],['Pt','Platinum',78,10,6],['Au','Gold',79,11,6],['Hg','Mercury',80,12,6],['Tl','Thallium',81,13,6],['Pb','Lead',82,14,6],['Bi','Bismuth',83,15,6],['Po','Polonium',84,16,6],['At','Astatine',85,17,6],['Rn','Radon',86,18,6],
+    ['Fr','Francium',87,1,7],['Ra','Radium',88,2,7],['Ac','Actinium',89,3,7],['Rf','Rutherfordium',104,4,7],['Db','Dubnium',105,5,7],['Sg','Seaborgium',106,6,7],['Bh','Bohrium',107,7,7],['Hs','Hassium',108,8,7],['Mt','Meitnerium',109,9,7],['Ds','Darmstadtium',110,10,7],['Rg','Roentgenium',111,11,7],['Cn','Copernicium',112,12,7],['Nh','Nihonium',113,13,7],['Fl','Flerovium',114,14,7],['Mc','Moscovium',115,15,7],['Lv','Livermorium',116,16,7],['Ts','Tennessine',117,17,7],['Og','Oganesson',118,18,7],
+    ['Ce','Cerium',58,4,9],['Pr','Praseodymium',59,5,9],['Nd','Neodymium',60,6,9],['Pm','Promethium',61,7,9],['Sm','Samarium',62,8,9],['Eu','Europium',63,9,9],['Gd','Gadolinium',64,10,9],['Tb','Terbium',65,11,9],['Dy','Dysprosium',66,12,9],['Ho','Holmium',67,13,9],['Er','Erbium',68,14,9],['Tm','Thulium',69,15,9],['Yb','Ytterbium',70,16,9],['Lu','Lutetium',71,17,9],
+    ['Th','Thorium',90,4,10],['Pa','Protactinium',91,5,10],['U','Uranium',92,6,10],['Np','Neptunium',93,7,10],['Pu','Plutonium',94,8,10],['Am','Americium',95,9,10],['Cm','Curium',96,10,10],['Bk','Berkelium',97,11,10],['Cf','Californium',98,12,10],['Es','Einsteinium',99,13,10],['Fm','Fermium',100,14,10],['Md','Mendelevium',101,15,10],['No','Nobelium',102,16,10],['Lr','Lawrencium',103,17,10]
+  ];
+  const table = document.getElementById('periodic-table');
+  for (const [symbol, name, number, column, row] of elements) {
+    const link = document.createElement('a');
+    const isCreated = symbol === 'Ni';
+    link.className = `element${isCreated ? ' created' : ''}`;
+    link.style.gridColumn = column;
+    link.style.gridRow = row;
+    link.href = isCreated
+      ? '../examples/crystals/Ni.xtal'
+      : `https://www.crystallography.net/cod/result?el1=${encodeURIComponent(symbol)}&format=html`;
+    if (isCreated) link.download = 'Ni.xtal';
+    else link.target = '_blank';
+    link.rel = 'noopener';
+    link.title = isCreated
+      ? 'Created crystal available: download Ni.xtal'
+      : `Search COD crystal structures containing ${name}`;
+    link.setAttribute('aria-label', isCreated
+      ? `${name}, atomic number ${number}; created crystal, download Ni.xtal`
+      : `${name}, atomic number ${number}; click to search COD`);
+    link.innerHTML = `<span class="number">${number}</span><span class="symbol">${symbol}</span><span class="name">${name}</span>${isCreated ? '<span class="created-mark">✓</span>' : ''}`;
+    table.appendChild(link);
+  }
+  for (const [label, row] of [['Lanthanides',9],['Actinides',10]]) {
+    const node = document.createElement('div');
+    node.className = 'series-label';
+    node.style.gridRow = row;
+    node.textContent = label;
+    table.appendChild(node);
+  }
+</script>
+</body>
+</html>
