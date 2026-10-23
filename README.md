@@ -16,17 +16,17 @@ The default layout is:
 ```text
 ~/kikuchipyCUDA/
   patterns.up1
-  master-source.h5                 # EMsoft HDF5 with CrystalData and Monte Carlo accum_z
+  crystal.xtal                     # EMsoft crystal structure HDF5 (CrystalData)
+  master-source.h5                 # optional existing EMsoft Monte Carlo HDF5
   scan.ang
   dictionary-indexing-cuda/       # clone this repository here
   KikuchiPyCUDA/                 # Conda environment, created below
 ```
 
-Inputs are raw UP1 experimental patterns, an EMsoft HDF5 file with crystal and
-Monte Carlo depth data, and ANG scan coordinates with detector calibration in
-the header. The HDF5 source may also contain a previously generated master; the
-Python stage reads its crystal and Monte Carlo data and writes a new master.
-The full pipeline also exports a self-contained HTML heat map from
+Inputs are raw UP1 experimental patterns and ANG scan coordinates with detector
+calibration in the header. You can either provide a crystal structure HDF5 and
+generate Monte Carlo data in Python/CuPy, or provide an existing EMsoft
+Monte Carlo HDF5. The full pipeline also exports a self-contained HTML heat map from
 `EMData/MCOpenCL/accum_z`, showing electron counts through depth (`z`) bins at
 each incident energy. Counts are summed over the Monte Carlo x-y bins, displayed
 with a logarithmic color scale, and reported as raw counts on hover. These inputs
@@ -83,11 +83,126 @@ when GPUs are visible it checks them as well. Tests use synthetic data.
 
 ## 4. Generate a master in Python, then index
 
-The full pipeline runs the master-pattern stage before dictionary projection
-and indexing. It uses Python, NumPy, and CuPy on the two allocated GPUs; it does
-not launch EMsoft or require a Fortran runtime. The source HDF5 must contain
-`CrystalData` and `EMData/MCOpenCL/accum_z` (the existing combined MC/master
-file is suitable).
+The full pipeline can create its Monte Carlo input from a crystal HDF5, then
+generate a master, project the dictionary, and index the experimental scan. The
+new Monte Carlo stage runs in Python/CuPy and does not launch EMsoft or require a
+Fortran runtime. It reads the crystal structure (`CrystalData`) from an EMsoft
+`.xtal` file or another HDF5 containing that group, simulates the selected
+number of incident electrons, and writes energy and depth histograms to a new
+HDF5. The output includes `accum_e` and `accum_z`, the datasets this project's
+master generator and penetration heat map consume. It does not write EMsoft's
+optional `accumSP` visualization dataset.
+
+Crystal files can also be created entirely in Python, without running
+`EMmkxtal` or Fortran. To reuse the crystal already stored in an EMsoft result:
+
+```bash
+python -m emsoft_di.crystal_file extract \
+  --input "$HOME/emsoft-port/data/EMMCopenCL_MCMP.h5" \
+  --output "$HOME/kikuchipyCUDA/crystal.xtal"
+```
+
+To enter a different phase using EMsoft's crystal-system and atom prompts, run
+the interactive Python equivalent of `EMmkxtal`:
+
+```bash
+python -m emsoft_di.crystal_file interactive \
+  --output "$HOME/kikuchipyCUDA/crystal.xtal"
+```
+
+It prompts for crystal system, lattice parameters, space group, asymmetric-unit
+atoms, occupancies, Debye-Waller factors, and the structure citation. The
+EMsoft Wiki's worked example supplies fcc Ni values (a=0.35236 nm, space group
+225, Ni at (0,0,0), occupancy 1, B=0.0035 nm²); it is an example, not a library
+of structures. Use values for the actual phase from a trusted crystallographic
+source. A JSON input is also supported: `template --output Ni.json` writes the
+Wiki's fcc-Ni example, then `create --input Ni.json --output Ni.xtal` writes it.
+
+The Python writer creates EMsoft's `CrystalData` HDF5 group. It currently
+supports standard space-group setting 1, matching the downstream Python crystal
+reader. Confirm the phase, cell, coordinates, occupancies, and Debye-Waller
+values against a trusted crystallographic source before simulating.
+
+The optional Materials Project connector can search entries by formula and
+prompt you to select one, or fetch a known MP ID directly. Install its extra and
+keep the API key in an environment variable (never in a tracked file):
+
+```bash
+python -m pip install -e '.[materials-project]'
+printf 'Materials Project API key: '
+read -rs MP_API_KEY
+printf '\n'
+export MP_API_KEY
+python -m emsoft_di.crystal_file materials-project --formula 'Ni3Al' \
+  --output "$HOME/kikuchipyCUDA/Ni3Al.xtal"
+```
+
+Use `--material-id mp-...` instead of `--formula` to select a specific record.
+The connector converts Materials Project's structure to a standard conventional
+cell, detects its space group at 0.1 Å tolerance, preserves any site occupancies
+provided by the structure, and assigns occupancy 1.0 if absent. It assigns
+`0.005 nm²` for each site's Debye-Waller factor when the structure has no such
+value. Review the selected record and generated cell before using it for
+indexing; Materials Project structures can use different cell settings than an
+experimental reference.
+
+For a small pipeline check, set your crystal and data paths and simulate a
+modest number of trajectories. The values below use a 16-pixel development
+master, 128 scan points, and a coarse dictionary so the first job stays small:
+
+```bash
+export KIKUCHIPY_CUDA_CRYSTAL="$HOME/kikuchipyCUDA/crystal.xtal"
+export KIKUCHIPY_CUDA_MC_ELECTRONS=1000000
+export KIKUCHIPY_CUDA_PATTERNS="$HOME/kikuchipyCUDA/patterns.up1"
+export KIKUCHIPY_CUDA_ANG="$HOME/kikuchipyCUDA/scan.ang"
+KIKUCHIPY_CUDA_MASTER_NPX=16 sbatch hpc/submit_master_then_index.slurm \
+  --limit 128 --resolution 3
+```
+
+If you only have the combined EMsoft MC/master file, you can make the crystal
+input by copying its `CrystalData` group into a small HDF5 file. For example,
+on Kamiak:
+
+```bash
+python - <<'PY'
+import h5py
+
+source = "/home/your-user/emsoft-port/data/EMMCopenCL_MCMP.h5"
+crystal = "/home/your-user/kikuchipyCUDA/crystal.xtal"
+with h5py.File(source, "r") as src, h5py.File(crystal, "w") as dst:
+    src.copy("CrystalData", dst)
+print(f"Wrote crystal structure: {crystal}")
+PY
+```
+
+Replace `your-user` with your HPC username. This copies only the crystal
+structure; the new Python MC stage calculates the electron histograms itself.
+
+The MC stage defaults to 30 keV incident energy, histogram energies from 15 to
+30 keV in 1 keV bins, 70-degree sample tilt, 100 nm maximum depth, 1 nm depth
+steps, and 300 scattering steps per electron, matching the EMsoft `full` mode
+defaults. Override these through `KIKUCHIPY_CUDA_MC_ENERGY_KEV`,
+`KIKUCHIPY_CUDA_MC_ENERGY_MIN_KEV`, `KIKUCHIPY_CUDA_MC_ENERGY_BIN_KEV`,
+`KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM`, `KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM`,
+`KIKUCHIPY_CUDA_MC_TILT_DEG`, `KIKUCHIPY_CUDA_MC_OMEGA_DEG`,
+`KIKUCHIPY_CUDA_MC_STEPS`, `KIKUCHIPY_CUDA_MC_SEED`, and
+`KIKUCHIPY_CUDA_MC_BATCH`. Choose the electron count explicitly: more
+trajectories reduce histogram noise and increase runtime. The generated file is
+named `monte-carlo-python-JOBID.h5` by default; set
+`KIKUCHIPY_CUDA_MC_OUTPUT` to change its location.
+
+To use an existing EMsoft Monte Carlo file instead, leave
+`KIKUCHIPY_CUDA_CRYSTAL` unset and set `KIKUCHIPY_CUDA_MC` to that file. It must
+contain `CrystalData`, `EMData/MCOpenCL/accum_z`, and the matching Monte Carlo
+metadata. This mode skips Python Monte Carlo generation.
+
+The trajectory equations follow EMsoft's OpenCL `full` mode, while CuPy runs
+them on the allocated GPUs. The random stream and floating-point execution are
+not bit-for-bit identical to EMsoft. Treat the first results as a port under
+validation: compare energy-resolved backscatter counts and depth distributions
+with an EMsoft run for the same crystal and settings, then validate resulting
+master patterns and indexed orientations. The generated HDF5 marks this status
+in its attributes.
 
 Set the source and experimental input paths, then submit:
 
@@ -98,8 +213,9 @@ export KIKUCHIPY_CUDA_ANG="$HOME/kikuchipyCUDA/scan.ang"
 sbatch hpc/submit_master_then_index.slurm
 ```
 
-The script writes `python-master-JOBID.h5`, then passes it directly to the
-existing GPU dictionary and indexing stage. It also writes the interactive
+The script writes the Monte Carlo HDF5 (when crystal input is set), then
+`python-master-JOBID.h5`, and passes the master to the existing GPU dictionary
+and indexing stage. It also writes the interactive
 electron-penetration heat map to
 `$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-JOBID.html`; open that HTML file in
 a browser after the export. The heat-map horizontal axis is depth in nm, the
