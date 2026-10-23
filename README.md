@@ -120,11 +120,14 @@ Wiki's fcc-Ni example, then `create --input Ni.json --output Ni.xtal` writes it.
 
 This repository includes that worked example as both
 [`examples/crystals/Ni.json`](examples/crystals/Ni.json) and
-[`examples/crystals/Ni.xtal`](examples/crystals/Ni.xtal). The clickable
-[periodic crystal map](docs/crystal_periodic_table.html) marks generated crystal
-files in green. Gray elements do not yet have a crystal file here; clicking one
-opens a COD search for structures containing that element. COD may return
-multiple compounds or phases, so choose the record that matches your sample.
+[`examples/crystals/Ni.xtal`](examples/crystals/Ni.xtal). The periodic-table image
+below marks generated crystal files in green; gray elements do not yet have a
+crystal file in this repository. Search the [Crystallography Open Database
+(COD)](https://cod.psdi.ac.uk/) for structures containing an element. COD may
+return multiple compounds or phases, so choose the record that matches your
+sample.
+
+![Periodic table showing created crystal files in green and uncreated elements in gray](docs/crystal_periodic_table.svg)
 
 The Python writer creates EMsoft's `CrystalData` HDF5 group. It currently
 supports standard space-group setting 1, matching the downstream Python crystal
