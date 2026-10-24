@@ -259,6 +259,25 @@ def match_worker(options, device_id, start, stop):
     k = min(options['keep_n'], len(dictionary))
     shard = output / f'gpu-{device_id}.h5'
     with cp.cuda.Device(device_id), h5py.File(shard, 'x') as f:
+        # Keep the complete simulation dictionary resident for this worker's
+        # entire scan range. The two GPU workers each make their own device copy.
+        required_bytes = int(np.prod(dictionary.shape)) * np.dtype(np.float32).itemsize
+        free_bytes, total_bytes = cp.cuda.runtime.memGetInfo()
+        if required_bytes > int(free_bytes * 0.8):
+            raise RuntimeError(
+                f'GPU {device_id} has {free_bytes / 2**30:.2f} GiB free, but the '
+                f'dictionary needs {required_bytes / 2**30:.2f} GiB; refusing to '
+                'start matching without keeping the dictionary in VRAM'
+            )
+        dictionary = cp.asarray(dictionary, dtype=cp.float32)
+        cp.cuda.get_current_stream().synchronize()
+        cached_free, _ = cp.cuda.runtime.memGetInfo()
+        print(
+            f'GPU {device_id}: dictionary resident in VRAM '
+            f'({required_bytes / 2**30:.2f} GiB; '
+            f'{(total_bytes - cached_free) / 2**30:.2f} GiB allocated on device)',
+            flush=True,
+        )
         f.attrs.update(start=start, stop=stop, complete=False, run_id=options['run_id'])
         indices = f.create_dataset('simulation_indices', (stop-start, k), dtype='i8', fillvalue=-1)
         scores = f.create_dataset('scores', (stop-start, k), dtype='f4', fillvalue=np.nan)
@@ -350,8 +369,8 @@ def main():
                         help='Average each experimental pattern with its six nearest hex-grid scan neighbors')
     parser.add_argument('--energy-mode', choices=('mc-global', 'highest-bin'), default='mc-global')
     parser.add_argument('--keep-n', type=int, default=20)
-    parser.add_argument('--pattern-batch', type=int, default=128)
-    parser.add_argument('--dictionary-batch', type=int, default=4096)
+    parser.add_argument('--pattern-batch', type=int, default=256)
+    parser.add_argument('--dictionary-batch', type=int, default=16384)
     parser.add_argument('--projection-batch', type=int, default=128)
     parser.add_argument('--cpu-threads', type=int, default=8)
     parser.add_argument('--dry-run', action='store_true', help='Read inputs and plan; do not create dictionary or require CUDA')

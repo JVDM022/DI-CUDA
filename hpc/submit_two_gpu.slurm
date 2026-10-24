@@ -26,4 +26,5 @@ export PYTHONUNBUFFERED=1
 # Default: coarse 128-pattern pilot. Arguments override the pilot settings.
 srun --ntasks=1 python -m emsoft_di.hpc \
   --devices 2 --limit 128 --resolution 3 --cpu-threads 8 \
+  --pattern-batch 256 --dictionary-batch 16384 \
   --output "dictionary-run-${SLURM_JOB_ID}" "$@"

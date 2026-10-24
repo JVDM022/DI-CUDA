@@ -120,12 +120,27 @@ Wiki's fcc-Ni example, then `create --input Ni.json --output Ni.xtal` writes it.
 
 This repository includes that worked example as both
 [`examples/crystals/Ni.json`](examples/crystals/Ni.json) and
-[`examples/crystals/Ni.xtal`](examples/crystals/Ni.xtal). The periodic-table image
-below marks generated crystal files in green; gray elements do not yet have a
+[`examples/crystals/Ni.xtal`](examples/crystals/Ni.xtal). It also includes
+separate NIST JARVIS-DFT fcc examples: Ni's
+[`JSON specification`](examples/crystals/Ni_JARVIS.json) and
+[generated `.xtal`](examples/crystals/Ni_JARVIS.xtal), plus Al's
+[`JSON specification`](examples/crystals/Al_JARVIS.json) and
+[generated `.xtal`](examples/crystals/Al_JARVIS.xtal). The JARVIS structures are
+DFT-relaxed conventional cells (Ni a=3.512 Å, Al a=4.04 Å; both Fm-3m, #225),
+not experimental measurements or copies of the OEM data. Their missing
+Debye-Waller factors use the explicit 0.005 nm² fallback. The periodic-table image
+below marks elements with included crystal files in green; gray elements do not yet have a
 crystal file in this repository. Search the [Crystallography Open Database
 (COD)](https://cod.psdi.ac.uk/) for structures containing an element. COD may
 return multiple compounds or phases, so choose the record that matches your
 sample.
+
+The supplied OEM Ni record reports Ni (Z=28), space group 225, and cubic lattice
+constants 3.55999994 Å. The JARVIS Ni example uses a=3.512 Å, about 1.35% smaller;
+both identify the fcc Fm-3m phase, but the JARVIS cell is not an exact reproduction
+of the OEM cell. In this OEM file, `CrystalData` and `ReflectorData` are packed
+byte arrays, so the file inspection confirms the element, space group, and cell
+but does not independently verify atomic coordinates or the Debye-Waller factor.
 
 ![Periodic table showing created crystal files in green and uncreated elements in gray](docs/crystal_periodic_table.svg)
 
@@ -300,7 +315,8 @@ sbatch hpc/submit_two_gpu.slurm
 ```
 
 The default pilot indexes 128 experimental patterns using a coarse 3-degree
-dictionary and 2x detector binning. The batch script requests two GPUs, 16 CPU
+dictionary and 2x detector binning. Matching uses 256-pattern batches and
+16,384-entry dictionary batches by default. The batch script requests two GPUs, 16 CPU
 cores, 64 GB host RAM and a four-hour limit. Each GPU compares projected
 reference patterns against kikuchipy before generating its dictionary portion.
 A failed comparison stops the job.

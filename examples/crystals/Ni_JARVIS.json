@@ -1,0 +1,22 @@
+{
+  "crystal_system": 1,
+  "lattice_parameters_nm_deg": [
+    0.3512,
+    0.3512,
+    0.3512,
+    90.0,
+    90.0,
+    90.0
+  ],
+  "space_group_number": 225,
+  "space_group_setting": 1,
+  "sites": [
+    {
+      "atomic_number": 28,
+      "fractional_coordinates": [0.0, 0.0, 0.0],
+      "occupancy": 1.0,
+      "b_iso_nm2": 0.005
+    }
+  ],
+  "source": "NIST JARVIS-DFT JVASP-943 (Ni, conventional fcc cell; DFT lattice a=b=c=3.512 angstrom, Fm-3m #225); DWF 0.005 nm^2 is an explicit fallback, not a JARVIS value. https://www.ctcms.nist.gov/~knc6/jsmol/JVASP-943.html"
+}

@@ -39,8 +39,11 @@ indices). Orientation columns, units, and conventions pass through unchanged.
 Scores are normalized dot products, not calibrated confidence indices.
 Exact ties favor the lower dictionary index. Near ties may differ with GPU
 floating-point rounding. Two-level batching avoids storing the full
-experimental-by-dictionary score matrix. Reduce batch sizes if VRAM is limited.
-Dictionary blocks are transferred again for each experimental batch.
+experimental-by-dictionary score matrix. The general `index_patterns()` API
+streams host-backed dictionary blocks to the GPU for each pattern batch. The
+HPC worker instead uploads the complete dictionary to each allocated GPU once
+and keeps that copy resident for the worker's scan range; reduce batch sizes if
+score-matrix temporaries require less VRAM.
 Sliceable HDF5 datasets are accepted directly if their first axis is patterns;
 dataset selection and any transposition must be done explicitly by the caller.
 
@@ -69,7 +72,8 @@ The launcher loads Miniconda, GCC and CUDA 12.2, activates
 `~/kikuchipyCUDA/KikuchiPyCUDA`, and requests two Camas GPUs,
 16 CPU cores, 64 GB host RAM and four hours. The time is a limit, not an estimate.
 It first runs a **128-pattern pilot** at coarse 3-degree orientation sampling
-and 2x binning. Each GPU checks its projector against kikuchipy CPU reference
+and 2x binning. Matching defaults to pattern batches of 256 and dictionary
+batches of 16,384. Each GPU checks its projector against kikuchipy CPU reference
 patterns before generating its dictionary range. A failed reference check stops
 the run. Geometric calculations use float64; saved dictionary patterns and NCC
 matching use float32. Only the small reference check uses CPU projection.
