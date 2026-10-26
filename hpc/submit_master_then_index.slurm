@@ -62,11 +62,13 @@ ang_file="${KIKUCHIPY_CUDA_ANG:-$KIKUCHIPY_CUDA_ROOT/scan.ang}"
 master_file="$KIKUCHIPY_CUDA_ROOT/python-master-${SLURM_JOB_ID}.h5"
 result_dir="$KIKUCHIPY_CUDA_ROOT/dictionary-run-${SLURM_JOB_ID}"
 penetration_map="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.html"
+penetration_svg="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.svg"
 
 echo "Exporting OpenCL Monte Carlo electron penetration heat map: $penetration_map"
 srun --ntasks=1 python -m emsoft_di.master.volume \
   --monte-carlo "$mc_file" \
-  --output "$penetration_map"
+  --output "$penetration_map" \
+  --svg "$penetration_svg"
 
 echo "Stage $master_stage/$stage_total: Python/CuPy dynamical master generation from $mc_file"
 srun --ntasks=1 python -m emsoft_di.master \

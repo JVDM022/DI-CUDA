@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import unittest
 import numpy as np
 from emsoft_di.hpc import (read_up, preprocess, preprocess_with_npa,
-    build_npa_neighbors, add_scan_mapping, merge)
+    build_npa_neighbors, scan_layout, add_scan_mapping, export_indexed_ang, merge)
 
 
 class HPCTests(unittest.TestCase):
@@ -38,6 +38,21 @@ class HPCTests(unittest.TestCase):
         averaged = preprocess_with_npa(data, np.array([4]), 1, 0, neighbors)
         np.testing.assert_allclose(averaged[0, 0, 0], 30/7)
 
+    def test_square_ang_layout_and_npa_use_eight_neighbors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            ang = Path(directory)/'square.ang'
+            coords = [(c*1.5, r*1.5) for r in range(3) for c in range(4)]
+            np.savetxt(ang, [[0, 0, 0, x, y] for x, y in coords])
+            calibration = {'XSTEP': 1.5, 'YSTEP': 1.5}
+            _, row, col, ix, nrows, width = scan_layout(ang, calibration, len(coords))
+            np.testing.assert_array_equal(row, np.repeat(np.arange(3), 4))
+            np.testing.assert_array_equal(col, np.tile(np.arange(4), 3))
+            neighbors = build_npa_neighbors(row, col, ix, nrows, width,
+                                            len(coords), 1.5, 1.5)
+            self.assertEqual(neighbors.shape, (12, 9))
+            self.assertEqual(np.count_nonzero(neighbors[5] >= 0), 9)
+            self.assertEqual(np.count_nonzero(neighbors[0] >= 0), 4)
+
     @unittest.skipUnless(importlib.util.find_spec('h5py'), 'h5py unavailable')
     def test_merge_retains_blank_rows_and_mapping_and_rejects_overwrite(self):
         import h5py
@@ -46,26 +61,55 @@ class HPCTests(unittest.TestCase):
             up = root/'patterns.up1'
             up.write_bytes(struct.pack('<4i', 4, 2, 2, 16)+bytes(24))
             ang = root/'scan.ang'
-            np.savetxt(ang, [[0,0,0,x,y] for x,y in [(0,0),(1,0),(2,0),(.5,1),(1.5,1)]])
+            ang_rows = np.array([
+                [0,0,0,x,y,123,0,0,456,0]
+                for x,y in [(0,0),(1,0),(2,0),(.5,1),(1.5,1)]
+            ], dtype=float)
+            with ang.open('w') as stream:
+                stream.write('# Phase 1\n# COLUMN_COUNT: 13\n')
+                stream.write('# COLUMN_HEADERS: a, b, c, d, e, f, g, h, i, j, k, l, m\n')
+                np.savetxt(stream, ang_rows)
             rotations = np.array([[1.,0,0,0], [0.,1,0,0]])
             np.save(root/'quaternions.npy', rotations)
-            np.save(root/'eulers.npy', np.zeros((2,3)))
-            ranges = [(0,3),(3,6)]
-            for device,(a,b) in enumerate(ranges):
+            eulers = np.array([[.1,.2,.3], [.4,.5,.6]])
+            np.save(root/'eulers.npy', eulers)
+            assigned_by_gpu = ([0,2,4], [1,3,5])
+            for device, assigned_rows in enumerate(assigned_by_gpu):
                 with h5py.File(root/f'gpu-{device}.h5','w') as f:
-                    f.attrs.update(start=a,stop=b,complete=True,run_id='test')
-                    f['simulation_indices'] = [[0],[-1],[1]]
-                    f['scores'] = [[1.],[np.nan],[.9]]
-                    f['valid'] = [True,False,True]
+                    f.attrs.update(count=6,complete=True,run_id='test')
+                    indices = np.full((6,1), -1, dtype=np.int64)
+                    scores = np.full((6,1), np.nan, dtype=np.float32)
+                    valid = np.zeros(6, dtype=bool)
+                    assigned = np.zeros(6, dtype=bool)
+                    for row in assigned_rows:
+                        assigned[row] = True
+                        valid[row] = row != 1
+                        if valid[row]:
+                            indices[row,0] = 0 if row == 0 else 1
+                            scores[row,0] = 1.0 if row == 0 else .9
+                    f['simulation_indices'] = indices
+                    f['scores'] = scores
+                    f['valid'] = valid
+                    f['assigned'] = assigned
             args = SimpleNamespace(output=root,keep_n=1,patterns=up,ang=ang)
-            merge(args,ranges,6,dict(dictionary_count=2,run_id='test'),dict(XSTEP=1,YSTEP=1))
+            merge(args,2,6,dict(dictionary_count=2,run_id='test'),dict(XSTEP=1,YSTEP=1))
             with h5py.File(root/'indexed.h5') as f:
                 self.assertTrue(f.attrs['complete'])
                 np.testing.assert_array_equal(f['ang_mapping/pattern_index'],[0,1,2,3,4])
                 self.assertTrue(np.isnan(f['best_quaternion'][1]).all())
                 np.testing.assert_array_equal(f['best_quaternion'][2],rotations[1])
+            exported = np.loadtxt(root/'indexed.ang', comments='#', ndmin=2)
+            header = (root/'indexed.ang').read_text().splitlines()
+            self.assertIn('# COLUMN_COUNT: 10', header)
+            np.testing.assert_allclose(exported[0,:3], eulers[0])
+            np.testing.assert_array_equal(exported[1,:3], [0,0,0])
+            np.testing.assert_array_equal(exported[2,:3], eulers[1])
+            self.assertEqual(exported[0,7], 0)
+            self.assertEqual(exported[1,7], -1)
+            self.assertEqual(exported[0,6], 0)
+            self.assertEqual(exported[0,9], -1)
             with self.assertRaises(FileExistsError):
-                merge(args,ranges,6,dict(dictionary_count=2,run_id='test'),dict(XSTEP=1,YSTEP=1))
+                merge(args,2,6,dict(dictionary_count=2,run_id='test'),dict(XSTEP=1,YSTEP=1))
 
     @unittest.skipUnless(importlib.util.find_spec('kikuchipy'), 'kikuchipy unavailable')
     def test_projection_matches_kikuchipy(self):

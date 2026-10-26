@@ -127,7 +127,18 @@ def _histogram_exit(accum_e, accum_z, lam_x, lam_y, depth, energy, settings):
         accum_z[px+coarse_radius, py+coarse_radius, iz, ie] += 1
 
 
-def simulate_cpu(crystal, settings):
+def _path_histogram_bin(x, zpos, settings):
+    """Bin a scatter point by lateral distance from the incident beam and depth."""
+    radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+    lateral_min = -radius * settings.depth_step_nm
+    lateral = x - zpos * math.tan(math.radians(settings.sample_tilt_deg))
+    ix = _round_fortran((lateral - lateral_min) / settings.depth_step_nm)
+    iz = _round_fortran(zpos / settings.depth_step_nm)
+    width = 2 * radius + 1
+    return (ix, iz) if 0 <= ix < width and 0 <= iz < settings.depth_bins else None
+
+
+def simulate_cpu(crystal, settings, include_path=False):
     """Small, slow, seeded reference implementation for tests and smoke runs."""
     zmean, atomic_weight, density = material_properties(crystal)
     size, nenergy = settings.detector_size, settings.energy_bins
@@ -135,6 +146,8 @@ def simulate_cpu(crystal, settings):
     accum_e = np.zeros((size, size, nenergy), dtype=np.int64)
     coarse = 2*(nx//10)+1
     accum_z = np.zeros((coarse, coarse, nz, nenergy), dtype=np.int64)
+    path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+    accum_path = np.zeros((2*path_radius+1, nz), dtype=np.int64) if include_path else None
     rng = np.random.default_rng(settings.seed)
     incident = math.radians(settings.sample_tilt_deg)
     omega = math.radians(settings.omega_deg)
@@ -152,6 +165,10 @@ def simulate_cpu(crystal, settings):
         jmean = (9.76*zmean + 58.5*zmean**(-0.19))*1e-3
         dedx = -0.00785*(zmean/(atomic_weight*energy))*math.log(1.166*energy/jmean+0.9911)
         energy += step*density*dedx
+        if accum_path is not None and zpos > 0.0:
+            path_bin = _path_histogram_bin(x, zpos, settings)
+            if path_bin is not None:
+                accum_path[path_bin] += 1
         escaped = False
         escape_depth = 0.0
         for _step_index in range(settings.steps):
@@ -177,6 +194,10 @@ def simulate_cpu(crystal, settings):
                 escape_depth = zpos/cnew[2]
             x += distance*cnew[0]; y += distance*cnew[1]; zpos += distance*cnew[2]
             energy += distance*density*dedx
+            if accum_path is not None and zpos > 0.0:
+                path_bin = _path_histogram_bin(x, zpos, settings)
+                if path_bin is not None:
+                    accum_path[path_bin] += 1
             cx, cy, cz = cnew
             if zpos <= 0.0:
                 lam_x, lam_y = _lambert_xy(cx, cy, cz)
@@ -186,11 +207,15 @@ def simulate_cpu(crystal, settings):
                 break
         # Keep this assignment explicit: no exit event means no histogram count.
         del escaped
+    if include_path:
+        return accum_e, accum_z, accum_path
     return accum_e, accum_z
 
 
-_CUDA_SOURCE = r'''#include <math.h>
-#include <stdint.h>
+_CUDA_SOURCE = r'''// Keep the NVRTC kernel self-contained: NVRTC does not reliably search
+// the host compiler's standard C header directories on HPC compute nodes.
+typedef unsigned int uint32_t;
+typedef int int32_t;
 
 __device__ __forceinline__ uint32_t mix32(uint32_t x) {
   x ^= x >> 16; x *= 0x7feb352dU; x ^= x >> 15;
@@ -226,9 +251,11 @@ __device__ __forceinline__ int nintf_away(float x) {
 }
 extern "C" __global__ void simulate_mc(
   unsigned long long *hist_e, unsigned long long *hist_z,
+  unsigned long long *hist_path,
   const long long offset, const long long count, const unsigned int seed,
   const float zmean, const float aw, const float rho, const float energy0,
   const float emin, const float ebin, const float depthstep,
+  const float depthmax, const float pathstep, const int npath,
   const int numsx, const int ne, const int nz, const float sig, const float omega,
   const int steps) {
   long long tid=(long long)blockDim.x*blockIdx.x+threadIdx.x;
@@ -249,6 +276,14 @@ extern "C" __global__ void simulate_mc(
   float jmean=(9.76f*zmean+58.5f*powf(zmean,-0.19f))*1.0e-3f;
   float dedx=-0.00785f*(zmean/(aw*energy))*logf(1.166f*energy/jmean+0.9911f);
   energy+=dist*rho*dedx;
+  if (zpos>0.0f && zpos<=depthmax) {
+    float lateral=x-zpos*tanf(sig);
+    int ilat=nintf_away((lateral+ceilf(depthmax/pathstep)*pathstep)/pathstep);
+    int izpath=nintf_away(zpos/pathstep);
+    if (ilat>=0 && ilat<npath && izpath>=0 && izpath<nz) {
+      atomicAdd(hist_path+((long long)ilat*nz+izpath),1ULL);
+    }
+  }
   float escape_depth=0.0f;
   for (int k=0;k<steps && energy>0.0f;k++) {
     alpha=3.4e-3f*powf(zmean,0.66667f)/energy;
@@ -273,6 +308,14 @@ extern "C" __global__ void simulate_mc(
     if (fabsf(cnz)>1.0e-5f) escape_depth=zpos/cnz;
     x+=dist*cnx; y+=dist*cny; zpos+=dist*cnz;
     energy+=dist*rho*dedx;
+    if (zpos>0.0f && zpos<=depthmax) {
+      float lateral=x-zpos*tanf(sig);
+      int ilat=nintf_away((lateral+ceilf(depthmax/pathstep)*pathstep)/pathstep);
+      int izpath=nintf_away(zpos/pathstep);
+      if (ilat>=0 && ilat<npath && izpath>=0 && izpath<nz) {
+        atomicAdd(hist_path+((long long)ilat*nz+izpath),1ULL);
+      }
+    }
     cx=cnx;cy=cny;cz=cnz;
     if (zpos<=0.0f) {
       float lx,ly; lambert(cx,cy,cz,&lx,&ly);
@@ -310,6 +353,9 @@ def _simulate_cuda_device(device, options, output_dir):
                            settings.energy_bins), dtype=cp.uint64)
         hist_z = cp.zeros((coarse, coarse, settings.depth_bins,
                            settings.energy_bins), dtype=cp.uint64)
+        path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+        path_bins = 2*path_radius+1
+        hist_path = cp.zeros((path_bins, settings.depth_bins), dtype=cp.uint64)
         kernel = cp.RawKernel(_CUDA_SOURCE, 'simulate_mc', options=('--std=c++11',))
         zmean, aw, rho = options['material']
         block = 256
@@ -319,21 +365,24 @@ def _simulate_cuda_device(device, options, output_dir):
         while started < count:
             n = min(settings.batch_electrons, count-started)
             kernel(((n+block-1)//block,), (block,), (
-                hist_e, hist_z, np.int64(started), np.int64(n),
+                hist_e, hist_z, hist_path, np.int64(started), np.int64(n),
                 np.uint32(settings.seed + device*0x9e3779b9), np.float32(zmean),
                 np.float32(aw), np.float32(rho), np.float32(settings.energy_kev),
                 np.float32(settings.energy_min_kev), np.float32(settings.energy_bin_kev),
-                np.float32(settings.depth_step_nm), np.int32(settings.detector_size),
+                np.float32(settings.depth_step_nm), np.float32(settings.depth_max_nm),
+                np.float32(settings.depth_step_nm), np.int32(path_bins),
+                np.int32(settings.detector_size),
                 np.int32(settings.energy_bins), np.int32(settings.depth_bins),
                 np.float32(sig), np.float32(omega), np.int32(settings.steps)))
             started += n
             if started == count or started % max(settings.batch_electrons*10, 1) == 0:
                 print(f'Monte Carlo GPU {device}: {started:,}/{count:,} trajectories', flush=True)
         np.savez_compressed(Path(output_dir)/f'mc-gpu-{device}.npz',
-                            accum_e=cp.asnumpy(hist_e), accum_z=cp.asnumpy(hist_z))
+                            accum_e=cp.asnumpy(hist_e), accum_z=cp.asnumpy(hist_z),
+                            accum_path=cp.asnumpy(hist_path))
 
 
-def _write_hdf5(crystal_source, target, settings, accum_e, accum_z, material, elapsed):
+def _write_hdf5(crystal_source, target, settings, accum_e, accum_z, accum_path, material, elapsed):
     import h5py
     from .master.physics import read_crystal
     from .master.model import read_depth_profiles
@@ -395,6 +444,15 @@ def _write_hdf5(crystal_source, target, settings, accum_e, accum_z, material, el
             mc['multiplier'] = [1]
             mc.create_dataset('accum_e', data=accum_e, compression='gzip', shuffle=True)
             mc.create_dataset('accum_z', data=accum_z, compression='gzip', shuffle=True)
+            path_dataset = mc.create_dataset('accum_path', data=accum_path,
+                                             compression='gzip', shuffle=True)
+            path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+            path_dataset.attrs['axis_order'] = 'lateral_x,depth_z'
+            path_dataset.attrs['lateral_min_nm'] = -path_radius * settings.depth_step_nm
+            path_dataset.attrs['lateral_step_nm'] = settings.depth_step_nm
+            path_dataset.attrs['depth_step_nm'] = settings.depth_step_nm
+            path_dataset.attrs['quantity'] = 'electron scattering-event counts'
+            path_dataset.attrs['lateral_coordinate'] = 'x relative to the incident beam axis'
             out.attrs['complete'] = True
     os.replace(partial, target)
     print(f'Monte Carlo HDF5 written: {target}', flush=True)
@@ -424,7 +482,7 @@ def run(settings, crystal_source, output, devices=(0, 1), backend='cuda'):
     if settings.seed < 0 or settings.seed > np.iinfo(np.uint32).max:
         raise ValueError('seed must be an unsigned 32-bit integer')
     if backend == 'cpu-reference':
-        accum_e64, accum_z64 = simulate_cpu(crystal, settings)
+        accum_e64, accum_z64, accum_path64 = simulate_cpu(crystal, settings, include_path=True)
         elapsed = 0.0
     elif backend == 'cuda':
         import cupy as cp
@@ -453,24 +511,32 @@ def run(settings, crystal_source, output, devices=(0, 1), backend='cuda'):
         nx = (settings.detector_size-1)//2
         accum_z64 = np.zeros((2*(nx//10)+1, 2*(nx//10)+1,
                               settings.depth_bins, settings.energy_bins), dtype=np.uint64)
+        path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+        accum_path64 = np.zeros((2*path_radius+1, settings.depth_bins), dtype=np.uint64)
         for device in devices:
             shard = work/f'mc-gpu-{device}.npz'
             if shard.exists():
                 with np.load(shard) as f:
                     accum_e64 += f['accum_e']
                     accum_z64 += f['accum_z']
+                    accum_path64 += f['accum_path']
         elapsed = time.perf_counter()-start
-        if np.any(accum_e64 > np.iinfo(np.int32).max) or np.any(accum_z64 > np.iinfo(np.int32).max):
+        if (np.any(accum_e64 > np.iinfo(np.int32).max) or
+                np.any(accum_z64 > np.iinfo(np.int32).max) or
+                np.any(accum_path64 > np.iinfo(np.int32).max)):
             raise OverflowError('Counts exceed EMsoft int32 HDF5 limits; reduce the electron count')
         # Keep shards and settings if HDF5 writing fails, for diagnosis.
     else:
         raise ValueError("backend must be 'cuda' or 'cpu-reference'")
     if (np.any(accum_e64 > np.iinfo(np.int32).max) or
-            np.any(accum_z64 > np.iinfo(np.int32).max)):
+            np.any(accum_z64 > np.iinfo(np.int32).max) or
+            np.any(accum_path64 > np.iinfo(np.int32).max)):
         raise OverflowError('Counts exceed EMsoft int32 HDF5 limits; reduce the electron count')
     accum_e = np.asarray(accum_e64, dtype=np.int32)
     accum_z = np.asarray(accum_z64, dtype=np.int32)
-    _write_hdf5(crystal_source, output, settings, accum_e, accum_z, material, elapsed)
+    accum_path = np.asarray(accum_path64, dtype=np.int32)
+    _write_hdf5(crystal_source, output, settings, accum_e, accum_z,
+                accum_path, material, elapsed)
     if backend == 'cuda':
         import shutil
         shutil.rmtree(work)

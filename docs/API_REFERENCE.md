@@ -53,8 +53,9 @@ dataset selection and any transposition must be done explicitly by the caller.
 
 `python -m emsoft_di.hpc` connects the UP1 reader, master loading, detector
 calibration, dictionary projection, and NCC matching. Both dictionary projection
-and matching are sharded over the requested GPUs. Experimental patterns are
-split into contiguous ranges and merged in original UP1 order. The defaults use
+and matching are distributed over the requested GPUs. Matching workers claim
+4,096-pattern chunks dynamically, then results are merged in original UP1 order.
+The defaults use
 the files in `~/kikuchipyCUDA`. Install `.[hpc]` and
 `cupy-cuda12x==13.6.0` in the existing Conda environment with CUDA 12.2 loaded.
 
@@ -78,7 +79,8 @@ patterns before generating its dictionary range. A failed reference check stops
 the run. Geometric calculations use float64; saved dictionary patterns and NCC
 matching use float32. Only the small reference check uses CPU projection.
 
-Output is `dictionary-run-JOBID/` beside the inputs, including `indexed.h5`,
+Output is `dictionary-run-JOBID/` beside the inputs, including `indexed.h5` and
+an automatically scan-mapped `indexed.ang`,
 `run.json`, a disk-backed dictionary, quaternions, Bunge Euler angles in radians,
 and intermediate GPU shards. Logs go to `dictionary-indexing-JOBID.log` in the
 submission directory. Blank experimental patterns have `valid=False`, NaN
@@ -87,6 +89,11 @@ scores and orientations, and simulation indices -1. These rows are preserved.
 runs, use `included_in_run` before indexing the output arrays. Header NCOLS are not used; the staggered-row mapping is checked against all
 ANG coordinates and the UP1 raster. Validate this acquisition-layout assumption
 for your scan.
+
+`indexed.ang` writes the matched Bunge Euler angles in radians into the source
+ANG row order. Unprocessed or invalid points receive phase index `-1`. NCC
+scores remain in HDF5; the ANG CI and Fit columns are set to `0` and `-1` because
+the matcher does not calculate those EDAX metrics.
 
 After reviewing pilot scores, geometry and orientations, a full scan can be
 requested explicitly:
@@ -195,11 +202,15 @@ factor lookup and static table construction run in Python on the CPU. CuPy on
 the allocated GPUs handles per-direction reflection selection, dynamical-matrix
 assembly, depth propagation and intensity integration in batches.
 
-`python -m emsoft_di.master.volume --monte-carlo INPUT.h5 --output OUTPUT.html`
-exports a self-contained interactive heat map from `EMData/MCOpenCL/accum_z`.
-It sums counts across x and y, then plots log-scaled electron counts by depth
-bin (z, in nm) and incident energy; hovering shows the unscaled count. This
-heat-map export is also included in `hpc/submit_master_then_index.slurm`.
+`python -m emsoft_di.master.volume --monte-carlo INPUT.h5 --output OUTPUT.html --svg OUTPUT.svg`
+exports an interactive HTML heat map and a static vector SVG. It plots the lateral-position
+by depth cross-section from the Python Monte Carlo extension dataset
+`EMData/MCOpenCL/accum_path` when present, using log-scaled scatter-event counts
+and showing unscaled counts on hover. Legacy EMsoft HDF5 files without recorded
+trajectories retain the depth-by-energy view from `accum_z`. Generating the
+interaction-volume view requires rerunning the Python Monte Carlo; existing
+EMsoft exit histograms do not contain electron paths. This heat-map export is
+also included in `hpc/submit_master_then_index.slurm`.
 
 The generated master is marked scientifically unvalidated. The Python
 implementation must be compared with an independent EMsoft master and checked

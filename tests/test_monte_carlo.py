@@ -39,6 +39,18 @@ class MonteCarloTests(unittest.TestCase):
         self.assertTrue(np.array_equal(accum_z, accum_z_again))
         self.assertTrue(np.all(accum_z.sum(axis=(0, 1, 2)) <= accum_e.sum(axis=(0, 1))))
 
+    def test_cpu_can_record_reproducible_interaction_cross_section(self):
+        settings = MCSettings(
+            electrons=200, energy_kev=30, energy_min_kev=1,
+            energy_bin_kev=1, detector_size=11, steps=30, seed=10,
+            depth_max_nm=20, depth_step_nm=1,
+        )
+        _, _, path = simulate_cpu(self.crystal, settings, include_path=True)
+        _, _, path_again = simulate_cpu(self.crystal, settings, include_path=True)
+        self.assertEqual(path.shape, (41, 21))
+        self.assertGreater(int(path.sum()), 0)
+        self.assertTrue(np.array_equal(path, path_again))
+
     def test_emmkxtal_json_spec_maps_to_emsoft_crystal_datasets(self):
         spec = {
             'crystal_system': 1,

@@ -3,8 +3,8 @@
 Generate an EBSD master pattern and dictionary, then match experimental
 patterns on NVIDIA GPUs. The pipeline uses a Python dynamical master generator,
 kikuchipy 0.13.1 detector geometry, a CuPy projector and a batched NCC matcher.
-Two GPUs share the master and dictionary calculations and then process separate
-experimental pattern ranges.
+Two GPUs project the dictionary and dynamically claim experimental-pattern
+chunks during matching, so a GPU that finishes one chunk can take the next.
 
 The Python import name remains `emsoft_di`. The repository folder can have any
 name. Upstream EMsoft attribution and license are retained in `LICENSE`.
@@ -26,10 +26,11 @@ The default layout is:
 Inputs are raw UP1 experimental patterns and ANG scan coordinates with detector
 calibration in the header. You can either provide a crystal structure HDF5 and
 generate Monte Carlo data in Python/CuPy, or provide an existing EMsoft
-Monte Carlo HDF5. The full pipeline also exports a self-contained HTML heat map from
-`EMData/MCOpenCL/accum_z`, showing electron counts through depth (`z`) bins at
-each incident energy. Counts are summed over the Monte Carlo x-y bins, displayed
-with a logarithmic color scale, and reported as raw counts on hover. These inputs
+Monte Carlo HDF5. Python-generated Monte Carlo output also records scattering-
+event positions for an x-z cross-section of the electron interaction volume.
+Its interactive HTML map uses logarithmic color and shows event counts on hover.
+Legacy EMsoft files without trajectory positions retain the depth-by-energy heat
+map. These inputs
 are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
 UP1 raster. It is not a generic reader for every vendor scan layout; validate
 the coordinate mapping for your acquisition.
@@ -88,9 +89,10 @@ generate a master, project the dictionary, and index the experimental scan. The
 new Monte Carlo stage runs in Python/CuPy and does not launch EMsoft or require a
 Fortran runtime. It reads the crystal structure (`CrystalData`) from an EMsoft
 `.xtal` file or another HDF5 containing that group, simulates the selected
-number of incident electrons, and writes energy and depth histograms to a new
-HDF5. The output includes `accum_e` and `accum_z`, the datasets this project's
-master generator and penetration heat map consume. It does not write EMsoft's
+number of incident electrons, and writes energy, exit-depth, and trajectory
+histograms to a new HDF5. The output includes `accum_e`, `accum_z`, and the
+KikuchiCUDA extension `accum_path`, which stores scatter-event counts in the
+beam-tilt-plane lateral-position/depth cross-section. It does not write EMsoft's
 optional `accumSP` visualization dataset.
 
 Crystal files can also be created entirely in Python, without running
@@ -275,9 +277,9 @@ To enable neighbour pattern averaging (NPA) on the combined pipeline, add
 sbatch hpc/submit_master_then_index.slurm --resolution 1 --npa
 ```
 
-NPA averages each preprocessed pattern with its available six nearest
-neighbours on the alternating-hex ANG scan grid. It may improve signal quality,
-but increases the effective interaction area and can reduce spatial
+NPA averages each preprocessed pattern with adjacent ANG scan points: up to six
+nearest neighbours on staggered hex grids or eight on square/raster grids. It
+may improve signal quality, but increases the effective interaction area and can reduce spatial
 resolution. NPA is off by default.
 
 The small master in the smoke run is for development checks, not production.
@@ -291,15 +293,43 @@ from the repository directory:
 ```bash
 python -m emsoft_di.master.volume \
   --monte-carlo "$HOME/emsoft-port/data/EMMCopenCL_MCMP.h5" \
-  --output "$HOME/kikuchipyCUDA/monte-carlo-penetration.html"
+  --output "$HOME/kikuchipyCUDA/monte-carlo-penetration.html" \
+  --svg "$HOME/kikuchipyCUDA/monte-carlo-penetration.svg"
 ```
 
-The standalone exporter writes a self-contained HTML volume heat map. It sums
-`accum_z` electron counts over x-y, plots depth in nm against incident energy
-in keV, and uses a logarithmic color scale; hover over a cell to see its raw
-count. Open the HTML file in a browser to zoom and inspect penetration through
-the depth bins. The combined pipeline exports the same interactive heat map
-automatically alongside the indexing results.
+The standalone exporter writes an interactive HTML heat map and, when `--svg`
+is supplied, a static vector SVG. It automatically
+uses `accum_path` for a side-view cross-section of scattering-event counts
+against lateral distance and depth when trajectory data are present. Open the
+HTML file in a browser to zoom and hover for raw counts. Existing EMsoft files
+usually contain only `accum_z`, which records exit/depth histograms rather than
+electron paths; for those files, the exporter retains the older depth-versus-
+energy view. To create the interaction-volume view from an existing master HDF5,
+rerun the Python Monte Carlo using that HDF5 as `--crystal` input, then export
+from the newly generated Monte Carlo HDF5. The master HDF5's `CrystalData` is
+enough; a separate `.xtal` file is not needed.
+
+For the Al HDF5 described above, the source already contains the crystal
+structure. From the repository on Kamiak, a one-million-electron pilot can be
+submitted on two GPUs with the original master’s beam energy and depth settings:
+
+```bash
+export KIKUCHIPY_CUDA_ROOT="$HOME/kikuchipyCUDA"
+export KIKUCHIPY_CUDA_CRYSTAL="$HOME/kikuchipyCUDA/Nathan's Al/Al Master pattern dynamic.h5"
+export KIKUCHIPY_CUDA_MC_ELECTRONS=1000000
+export KIKUCHIPY_CUDA_MC_ENERGY_KEV=20
+export KIKUCHIPY_CUDA_MC_ENERGY_MIN_KEV=6.666667
+export KIKUCHIPY_CUDA_MC_ENERGY_BIN_KEV=0.888889
+export KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM=100
+export KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM=2
+export KIKUCHIPY_CUDA_MC_TILT_DEG=70
+sbatch --export=ALL hpc/submit_interaction_volume.slurm
+```
+
+The pilot writes a new Monte Carlo HDF5, an interactive HTML heat map, and a
+static SVG in the KikuchiCUDA data folder. Increase the electron count if the
+cross-section looks noisy. This reruns only Monte Carlo and visualization; it
+does not regenerate the master pattern or re-index the scan.
 
 The generated HDF5 identifies itself as a KikuchiCUDA Python master and records
 that scientific validation is incomplete. Compare it with an independently
@@ -352,11 +382,17 @@ To enable neighbour pattern averaging (NPA) for the experimental patterns, add
 sbatch hpc/submit_two_gpu.slurm --limit 0 --resolution 1 --npa
 ```
 
-NPA averages each preprocessed pattern equally with its available six nearest
-neighbours on the alternating-hex ANG scan grid. Edge and missing scan points
-use only the available patterns. This may improve pattern signal quality, but
+NPA averages each preprocessed pattern equally with adjacent scan points: up to
+six nearest neighbours on staggered hex grids or eight on square/raster grids.
+Edge and missing scan points use only available patterns. This may improve pattern signal quality, but
 it increases the effective interaction area and can reduce spatial resolution.
 It is off by default; runs without `--npa` keep indexing patterns separately.
+
+Matching work is dynamically scheduled in chunks of 4,096 scan points by
+default. A GPU claims another chunk as soon as it finishes its current one,
+which reduces idle time when the two GPUs run at different speeds. To adjust the
+load-balancing granularity, pass `--work-chunk 2048` (smaller chunks rebalance
+more often; larger chunks reduce scheduling overhead).
 
 For a different data root or environment:
 
@@ -377,13 +413,22 @@ sacct -j JOBID --format=JobID,State,ExitCode,Elapsed
 ```
 
 Logs are written in the submission directory. Results are written under the data
-root in `dictionary-run-JOBID/`. A successful run publishes `indexed.h5` only
-after validating and merging the GPU shards. Existing output directories and
-final results are not overwritten. Intermediate files remain for diagnosis.
+root in `dictionary-run-JOBID/`. A successful run publishes `indexed.h5` and
+`indexed.ang` after validating and merging the GPU shards. The ANG file is
+automatically mapped back to the source ANG row order, so it can be opened
+directly in MTEX/OIM without a separate UP1-to-ANG remapping step. Existing
+output directories and final results are not overwritten. Intermediate files
+remain for diagnosis.
 
 ## 8. Read the output
 
-This is a custom results HDF5 file, not an OIM-compatible export. Key datasets:
+`indexed.ang` contains the matched Bunge Euler angles in radians and can be
+loaded as a conventional ANG scan for plotting. Invalid or unprocessed points
+have zero Euler angles and phase index `-1`. The matcher does not calculate
+EDAX confidence index or angular fit, so those fields are set to `0` and `-1`;
+the NCC scores and validity flags remain in `indexed.h5`.
+
+`indexed.h5` retains the full custom results and scan mapping. Key datasets:
 
 | Dataset | Meaning |
 | --- | --- |
@@ -399,18 +444,19 @@ This is a custom results HDF5 file, not an OIM-compatible export. Key datasets:
 | `ang_mapping/included_in_run` | Whether a mapped point was included in this run |
 
 The root `complete` attribute must be true. Blank patterns retain their rows with
-invalid flags, -1 indices, and NaN scores/orientations. Use the mapping rather than
-reshaping UP1 rows into an ANG image. A pilot may not cover every mapped index.
+invalid flags, -1 indices, and NaN scores/orientations. A pilot's unprocessed
+points are marked phase `-1` in `indexed.ang`.
 The output folder also contains `run.json`, the dictionary, energy weights and
 per-GPU projection-check reports.
 
 ## Plotting with MTEX
 
 See the official [MTEX instructions](https://mtex-toolbox.github.io/EBSDTutorial_py.html)
-and [orientation-map plotting guide](https://mtex-toolbox.github.io/EBSDPlotting_py.html).
-No plotting notebook is included. Import the custom datasets explicitly, apply
-the saved spatial mapping, and check the Euler/reference-frame convention before
-plotting. MTEX's generic HDF5 reader should not be assumed to recognize this schema.
+and [orientation-map plotting guide](https://mtex-toolbox.github.io/EBSDPlotting_py.html)
+to load and plot `indexed.ang`. The source scan geometry and spatial coordinates
+are preserved. Independently validate the Euler/reference-frame convention
+before scientific interpretation. The custom `.h5` remains available for NCC
+scores, validity flags, and dictionary matches.
 
 ## Validation and limits
 
