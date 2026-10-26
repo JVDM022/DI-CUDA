@@ -10,7 +10,8 @@ except ImportError:
     h5py = None
 
 from emsoft_di.master.volume import (
-    read_mc_volume, depth_energy_counts, read_interaction_map, _write_heatmap_svg,
+    read_mc_volume, depth_energy_counts, read_interaction_map, read_sample_tilt,
+    tilt_interaction_map, _write_heatmap_svg,
 )
 
 
@@ -61,6 +62,25 @@ class MonteCarloVolumeTests(unittest.TestCase):
             np.testing.assert_array_equal(counts, expected)
             np.testing.assert_allclose(lateral_nm, [-0.5, 0.5, 1.5])
             np.testing.assert_allclose(depth_nm, [0.25, 0.75, 1.25, 1.75, 2.25])
+
+    def test_sample_frame_tilt_shifts_map_and_reads_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'mc.h5'
+            profile = np.zeros((5, 3), dtype=np.int32)
+            profile[2, :] = 10
+            lateral = np.arange(-2.0, 3.0)
+            depth = np.asarray([0.5, 1.5, 2.5])
+            with h5py.File(path, 'w') as file:
+                file.attrs['settings_json'] = '{"sample_tilt_deg": 45.0}'
+
+            self.assertEqual(read_sample_tilt(path), 45.0)
+            rotated, lab_x, lab_z, beam_line, surface_line = tilt_interaction_map(
+                profile, lateral, depth, 45.0)
+            self.assertEqual(rotated.shape, (len(lab_x), len(lab_z)))
+            np.testing.assert_allclose(beam_line[0], [0.0, 0.0])
+            np.testing.assert_allclose(
+                beam_line[1], depth[[0, -1]] / np.cos(np.deg2rad(45)))
+            np.testing.assert_allclose(surface_line[1], surface_line[0], atol=1e-12)
 
     def test_legacy_mc_file_explains_missing_trajectory_map(self):
         with tempfile.TemporaryDirectory() as directory:

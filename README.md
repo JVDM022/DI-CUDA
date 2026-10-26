@@ -95,6 +95,13 @@ KikuchiCUDA extension `accum_path`, which stores scatter-event counts in the
 beam-tilt-plane lateral-position/depth cross-section. It does not write EMsoft's
 optional `accumSP` visualization dataset.
 
+Depth and lateral histogram limits are independent. For a 10 µm depth range,
+±2 µm lateral range, and 0.5 nm bins, set
+`KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM=10000`,
+`KIKUCHIPY_CUDA_MC_LATERAL_MAX_NM=2000`, and
+`KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM=0.5` before submitting the interaction-volume
+job. This produces 20,001 depth bins by 8,001 lateral bins in `accum_path`.
+
 Crystal files can also be created entirely in Python, without running
 `EMmkxtal` or Fortran. To reuse the crystal already stored in an EMsoft result:
 

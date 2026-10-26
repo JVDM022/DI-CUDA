@@ -19,6 +19,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 
 export KIKUCHIPY_CUDA_ROOT="${KIKUCHIPY_CUDA_ROOT:-$HOME/kikuchipyCUDA}"
 conda activate "${KIKUCHIPY_CUDA_ENV:-$KIKUCHIPY_CUDA_ROOT/KikuchiPyCUDA}"
+python_bin="$CONDA_PREFIX/bin/python"
 cd "$KIKUCHIPY_CUDA_ROOT/dictionary-indexing-cuda"
 
 export MPLBACKEND=Agg
@@ -38,7 +39,7 @@ if [[ -n "${KIKUCHIPY_CUDA_CRYSTAL:-}" ]]; then
   stage_total=3
   mc_file="${KIKUCHIPY_CUDA_MC_OUTPUT:-$KIKUCHIPY_CUDA_ROOT/monte-carlo-python-${SLURM_JOB_ID}.h5}"
   echo "Stage 1/3: Python/CuPy Monte Carlo generation from $KIKUCHIPY_CUDA_CRYSTAL"
-  srun --ntasks=1 python -m emsoft_di.monte_carlo \
+  srun --ntasks=1 "$python_bin" -m emsoft_di.monte_carlo \
     --crystal "$KIKUCHIPY_CUDA_CRYSTAL" \
     --output "$mc_file" \
     --electrons "$KIKUCHIPY_CUDA_MC_ELECTRONS" \
@@ -47,6 +48,7 @@ if [[ -n "${KIKUCHIPY_CUDA_CRYSTAL:-}" ]]; then
     --energy-bin-kev "${KIKUCHIPY_CUDA_MC_ENERGY_BIN_KEV:-1}" \
     --depth-max-nm "${KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM:-100}" \
     --depth-step-nm "${KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM:-1}" \
+    --lateral-max-nm "${KIKUCHIPY_CUDA_MC_LATERAL_MAX_NM:-${KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM:-100}}" \
     --detector-size "${KIKUCHIPY_CUDA_MC_DETECTOR_SIZE:-501}" \
     --sample-tilt-deg "${KIKUCHIPY_CUDA_MC_TILT_DEG:-70}" \
     --omega-deg "${KIKUCHIPY_CUDA_MC_OMEGA_DEG:-0}" \
@@ -65,13 +67,13 @@ penetration_map="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.ht
 penetration_svg="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.svg"
 
 echo "Exporting OpenCL Monte Carlo electron penetration heat map: $penetration_map"
-srun --ntasks=1 python -m emsoft_di.master.volume \
+srun --ntasks=1 "$python_bin" -m emsoft_di.master.volume \
   --monte-carlo "$mc_file" \
   --output "$penetration_map" \
   --svg "$penetration_svg"
 
 echo "Stage $master_stage/$stage_total: Python/CuPy dynamical master generation from $mc_file"
-srun --ntasks=1 python -m emsoft_di.master \
+srun --ntasks=1 "$python_bin" -m emsoft_di.master \
   --monte-carlo "$mc_file" \
   --output "$master_file" \
   --backend cuda --devices 2 \
@@ -81,7 +83,7 @@ srun --ntasks=1 python -m emsoft_di.master \
   --max-beams "${KIKUCHIPY_CUDA_MASTER_MAX_BEAMS:-512}"
 
 echo "Stage $index_stage/$stage_total: GPU dictionary generation and pattern indexing"
-srun --ntasks=1 python -m emsoft_di.hpc \
+srun --ntasks=1 "$python_bin" -m emsoft_di.hpc \
   --patterns "$pattern_file" \
   --master "$master_file" \
   --ang "$ang_file" \

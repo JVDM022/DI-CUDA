@@ -3,7 +3,9 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from emsoft_di.monte_carlo import MCSettings, material_properties, simulate_cpu
+from emsoft_di.monte_carlo import (
+    MCSettings, _path_histogram_bin, material_properties, simulate_cpu,
+)
 from emsoft_di.crystal_file import (
     interactive_spec, materials_project_spec, validate_spec,
 )
@@ -50,6 +52,17 @@ class MonteCarloTests(unittest.TestCase):
         self.assertEqual(path.shape, (41, 21))
         self.assertGreater(int(path.sum()), 0)
         self.assertTrue(np.array_equal(path, path_again))
+
+    def test_lateral_histogram_range_is_independent_of_depth(self):
+        settings = MCSettings(
+            electrons=200, energy_kev=30, energy_min_kev=1,
+            energy_bin_kev=1, detector_size=11, steps=30, seed=10,
+            depth_max_nm=20, depth_step_nm=0.5, lateral_max_nm=2000,
+        )
+        _, _, path = simulate_cpu(self.crystal, settings, include_path=True)
+        self.assertEqual(path.shape, (8001, 41))
+        self.assertEqual(settings.lateral_radius, 4000)
+        self.assertEqual(_path_histogram_bin(0.0, 0.0, settings)[0], 4000)
 
     def test_emmkxtal_json_spec_maps_to_emsoft_crystal_datasets(self):
         spec = {

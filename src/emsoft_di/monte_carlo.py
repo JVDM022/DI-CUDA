@@ -49,6 +49,7 @@ class MCSettings:
     energy_bin_kev: float = 1.0
     depth_max_nm: float = 100.0
     depth_step_nm: float = 1.0
+    lateral_max_nm: float | None = None
     detector_size: int = 501
     sample_tilt_deg: float = 70.0
     omega_deg: float = 0.0
@@ -63,6 +64,14 @@ class MCSettings:
     @property
     def depth_bins(self):
         return int(self.depth_max_nm / self.depth_step_nm) + 1
+
+    @property
+    def lateral_limit_nm(self):
+        return self.depth_max_nm if self.lateral_max_nm is None else self.lateral_max_nm
+
+    @property
+    def lateral_radius(self):
+        return math.ceil(self.lateral_limit_nm / self.depth_step_nm)
 
 
 def material_properties(crystal):
@@ -129,7 +138,7 @@ def _histogram_exit(accum_e, accum_z, lam_x, lam_y, depth, energy, settings):
 
 def _path_histogram_bin(x, zpos, settings):
     """Bin a scatter point by lateral distance from the incident beam and depth."""
-    radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+    radius = settings.lateral_radius
     lateral_min = -radius * settings.depth_step_nm
     lateral = x - zpos * math.tan(math.radians(settings.sample_tilt_deg))
     ix = _round_fortran((lateral - lateral_min) / settings.depth_step_nm)
@@ -146,7 +155,7 @@ def simulate_cpu(crystal, settings, include_path=False):
     accum_e = np.zeros((size, size, nenergy), dtype=np.int64)
     coarse = 2*(nx//10)+1
     accum_z = np.zeros((coarse, coarse, nz, nenergy), dtype=np.int64)
-    path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+    path_radius = settings.lateral_radius
     accum_path = np.zeros((2*path_radius+1, nz), dtype=np.int64) if include_path else None
     rng = np.random.default_rng(settings.seed)
     incident = math.radians(settings.sample_tilt_deg)
@@ -255,7 +264,7 @@ extern "C" __global__ void simulate_mc(
   const long long offset, const long long count, const unsigned int seed,
   const float zmean, const float aw, const float rho, const float energy0,
   const float emin, const float ebin, const float depthstep,
-  const float depthmax, const float pathstep, const int npath,
+  const float depthmax, const float lateralmax, const float pathstep, const int npath,
   const int numsx, const int ne, const int nz, const float sig, const float omega,
   const int steps) {
   long long tid=(long long)blockDim.x*blockIdx.x+threadIdx.x;
@@ -278,7 +287,7 @@ extern "C" __global__ void simulate_mc(
   energy+=dist*rho*dedx;
   if (zpos>0.0f && zpos<=depthmax) {
     float lateral=x-zpos*tanf(sig);
-    int ilat=nintf_away((lateral+ceilf(depthmax/pathstep)*pathstep)/pathstep);
+    int ilat=nintf_away((lateral+ceilf(lateralmax/pathstep)*pathstep)/pathstep);
     int izpath=nintf_away(zpos/pathstep);
     if (ilat>=0 && ilat<npath && izpath>=0 && izpath<nz) {
       atomicAdd(hist_path+((long long)ilat*nz+izpath),1ULL);
@@ -310,7 +319,7 @@ extern "C" __global__ void simulate_mc(
     energy+=dist*rho*dedx;
     if (zpos>0.0f && zpos<=depthmax) {
       float lateral=x-zpos*tanf(sig);
-      int ilat=nintf_away((lateral+ceilf(depthmax/pathstep)*pathstep)/pathstep);
+      int ilat=nintf_away((lateral+ceilf(lateralmax/pathstep)*pathstep)/pathstep);
       int izpath=nintf_away(zpos/pathstep);
       if (ilat>=0 && ilat<npath && izpath>=0 && izpath<nz) {
         atomicAdd(hist_path+((long long)ilat*nz+izpath),1ULL);
@@ -353,7 +362,7 @@ def _simulate_cuda_device(device, options, output_dir):
                            settings.energy_bins), dtype=cp.uint64)
         hist_z = cp.zeros((coarse, coarse, settings.depth_bins,
                            settings.energy_bins), dtype=cp.uint64)
-        path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+        path_radius = settings.lateral_radius
         path_bins = 2*path_radius+1
         hist_path = cp.zeros((path_bins, settings.depth_bins), dtype=cp.uint64)
         kernel = cp.RawKernel(_CUDA_SOURCE, 'simulate_mc', options=('--std=c++11',))
@@ -370,6 +379,7 @@ def _simulate_cuda_device(device, options, output_dir):
                 np.float32(aw), np.float32(rho), np.float32(settings.energy_kev),
                 np.float32(settings.energy_min_kev), np.float32(settings.energy_bin_kev),
                 np.float32(settings.depth_step_nm), np.float32(settings.depth_max_nm),
+                np.float32(settings.lateral_limit_nm),
                 np.float32(settings.depth_step_nm), np.int32(path_bins),
                 np.int32(settings.detector_size),
                 np.int32(settings.energy_bins), np.int32(settings.depth_bins),
@@ -446,9 +456,10 @@ def _write_hdf5(crystal_source, target, settings, accum_e, accum_z, accum_path, 
             mc.create_dataset('accum_z', data=accum_z, compression='gzip', shuffle=True)
             path_dataset = mc.create_dataset('accum_path', data=accum_path,
                                              compression='gzip', shuffle=True)
-            path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+            path_radius = settings.lateral_radius
             path_dataset.attrs['axis_order'] = 'lateral_x,depth_z'
             path_dataset.attrs['lateral_min_nm'] = -path_radius * settings.depth_step_nm
+            path_dataset.attrs['lateral_max_nm'] = path_radius * settings.depth_step_nm
             path_dataset.attrs['lateral_step_nm'] = settings.depth_step_nm
             path_dataset.attrs['depth_step_nm'] = settings.depth_step_nm
             path_dataset.attrs['quantity'] = 'electron scattering-event counts'
@@ -473,11 +484,12 @@ def run(settings, crystal_source, output, devices=(0, 1), backend='cuda'):
         raise ValueError('electrons, steps and batch-electrons must be positive')
     numeric_settings = (settings.energy_kev, settings.energy_min_kev,
         settings.energy_bin_kev, settings.depth_max_nm, settings.depth_step_nm,
-        settings.sample_tilt_deg, settings.omega_deg)
+        settings.lateral_limit_nm, settings.sample_tilt_deg, settings.omega_deg)
     if not np.isfinite(numeric_settings).all():
         raise ValueError('Monte Carlo settings must be finite')
     if (settings.energy_kev <= settings.energy_min_kev or settings.energy_bin_kev <= 0 or
-            settings.depth_max_nm < 0 or settings.depth_step_nm <= 0):
+            settings.depth_max_nm <= 0 or settings.depth_step_nm <= 0 or
+            settings.lateral_limit_nm <= 0):
         raise ValueError('Invalid energy or depth histogram settings')
     if settings.seed < 0 or settings.seed > np.iinfo(np.uint32).max:
         raise ValueError('seed must be an unsigned 32-bit integer')
@@ -554,6 +566,8 @@ def main():
     parser.add_argument('--energy-bin-kev', type=float, default=1.0)
     parser.add_argument('--depth-max-nm', type=float, default=100.0)
     parser.add_argument('--depth-step-nm', type=float, default=1.0)
+    parser.add_argument('--lateral-max-nm', type=float,
+                        help='Maximum absolute lateral distance recorded; defaults to depth-max-nm')
     parser.add_argument('--detector-size', type=int, default=501)
     parser.add_argument('--sample-tilt-deg', type=float, default=70.0)
     parser.add_argument('--omega-deg', type=float, default=0.0)
@@ -566,6 +580,7 @@ def main():
     settings = MCSettings(electrons=args.electrons, energy_kev=args.energy_kev,
         energy_min_kev=args.energy_min_kev, energy_bin_kev=args.energy_bin_kev,
         depth_max_nm=args.depth_max_nm, depth_step_nm=args.depth_step_nm,
+        lateral_max_nm=args.lateral_max_nm,
         detector_size=args.detector_size, sample_tilt_deg=args.sample_tilt_deg,
         omega_deg=args.omega_deg, steps=args.steps, seed=args.seed,
         batch_electrons=args.batch_electrons)

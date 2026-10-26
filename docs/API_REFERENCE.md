@@ -212,6 +212,12 @@ interaction-volume view requires rerunning the Python Monte Carlo; existing
 EMsoft exit histograms do not contain electron paths. This heat-map export is
 also included in `hpc/submit_master_then_index.slurm`.
 
+Monte Carlo accepts separate `--depth-max-nm` and `--lateral-max-nm` limits;
+the latter is the absolute half-width of the recorded lateral axis. Both axes
+use the `--depth-step-nm` bin spacing. On the Slurm wrappers, set
+`KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM`, `KIKUCHIPY_CUDA_MC_LATERAL_MAX_NM`, and
+`KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM` to configure those limits.
+
 The generated master is marked scientifically unvalidated. The Python
 implementation must be compared with an independent EMsoft master and checked
 against experimental patterns before scientific interpretation. It does not

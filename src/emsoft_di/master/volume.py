@@ -1,6 +1,7 @@
 """Export an interactive electron-penetration heat map from EMsoft OpenCL MC data."""
 import argparse
 from html import escape
+import json
 from pathlib import Path
 
 import h5py
@@ -64,7 +65,93 @@ def read_interaction_map(path):
     return counts, lateral, depth
 
 
-def _write_heatmap_svg(output, values, x, y, title, x_label, y_label):
+def read_sample_tilt(path):
+    """Read the simulated sample tilt angle stored by the Python MC writer."""
+    with h5py.File(path, 'r') as source:
+        metadata = source.attrs.get('settings_json')
+    if metadata is None:
+        return 0.0
+    if isinstance(metadata, bytes):
+        metadata = metadata.decode('utf-8')
+    try:
+        angle = float(json.loads(metadata).get('sample_tilt_deg', 0.0))
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError('Invalid sample_tilt_deg metadata in Monte Carlo HDF5') from exc
+    if not np.isfinite(angle) or abs(angle) >= 90:
+        raise ValueError('Sample tilt must be finite and between -90 and 90 degrees')
+    return angle
+
+
+def tilt_interaction_map(profile, lateral_nm, depth_nm, tilt_deg, max_bins=900):
+    """Rotate beam-centered sample coordinates into the lab frame.
+
+    The sample surface is tilted by ``tilt_deg`` from horizontal; lab Z/beam
+    remains vertical. The input lateral coordinate is the offset from the
+    incident beam axis and depth is measured along the sample normal.
+    """
+    values = np.asarray(profile, dtype=np.float64).T  # depth by lateral
+    lateral_nm = np.asarray(lateral_nm, dtype=np.float64)
+    depth_nm = np.asarray(depth_nm, dtype=np.float64)
+    if values.shape != (len(depth_nm), len(lateral_nm)):
+        raise ValueError('Interaction map shape does not match its axes')
+    if values.size == 0 or max_bins < 2:
+        raise ValueError('Interaction map and display resolution must be nonempty')
+
+    # Bound browser/SVG size while retaining total scatter counts in each display bin.
+    def reduce_axis(array, axis, coordinates):
+        count = array.shape[axis]
+        bins = min(count, max_bins)
+        edges = np.linspace(0, count, bins + 1, dtype=np.int64)
+        reduced = np.add.reduceat(array, edges[:-1], axis=axis)
+        centers = (edges[:-1] + edges[1:] - 1) / 2
+        step = (coordinates[1] - coordinates[0]) if len(coordinates) > 1 else 1.0
+        coords = coordinates[0] + centers * step
+        return reduced, coords
+
+    values, depth_nm = reduce_axis(values, 0, depth_nm)
+    values, lateral_nm = reduce_axis(values, 1, lateral_nm)
+    theta = np.deg2rad(tilt_deg)
+    cosine, sine = np.cos(theta), np.sin(theta)
+    x_min, x_max = lateral_nm[0] * cosine, lateral_nm[-1] * cosine
+    dx0 = lateral_nm[1] - lateral_nm[0] if len(lateral_nm) > 1 else 1.0
+    dx = max(dx0 * cosine, (x_max - x_min) / (max_bins - 1))
+    lab_x = np.arange(x_min, x_max + dx * 0.5, dx)
+
+    z_min = lateral_nm[0] * sine + depth_nm[0] / cosine
+    z_max = lateral_nm[-1] * sine + depth_nm[-1] / cosine
+    dz0 = depth_nm[1] - depth_nm[0] if len(depth_nm) > 1 else 1.0
+    dz = max(min(dx0 * abs(sine), dz0 / cosine), (z_max - z_min) / (max_bins - 1))
+    lab_z = np.arange(z_min, z_max + dz * 0.5, dz)
+
+    # Inverse rotation: lab (X,Z) -> beam-centered lateral offset and sample depth.
+    lateral_query = lab_x / cosine
+    depth_query = (lab_z[:, None] - lateral_query[None, :] * sine) * cosine
+    ix1 = np.searchsorted(lateral_nm, lateral_query, side='right')
+    iz1 = np.searchsorted(depth_nm, depth_query, side='right')
+    valid = ((lateral_query[None, :] >= lateral_nm[0]) &
+             (lateral_query[None, :] <= lateral_nm[-1]) &
+             (depth_query >= depth_nm[0]) & (depth_query <= depth_nm[-1]))
+    ix1 = np.clip(ix1, 1, len(lateral_nm) - 1)
+    iz1 = np.clip(iz1, 1, len(depth_nm) - 1)
+    ix0, iz0 = ix1 - 1, iz1 - 1
+    fx = np.clip((lateral_query - lateral_nm[ix0]) /
+                 (lateral_nm[ix1] - lateral_nm[ix0]), 0, 1)
+    fz = np.clip((depth_query - depth_nm[iz0]) /
+                 (depth_nm[iz1] - depth_nm[iz0]), 0, 1)
+    lower = values[iz0, ix0] * (1 - fx)[None, :] + values[iz0, ix1] * fx[None, :]
+    upper = values[iz1, ix0] * (1 - fx)[None, :] + values[iz1, ix1] * fx[None, :]
+    rotated = np.where(valid, lower * (1 - fz) + upper * fz, 0.0)
+
+    # The beam is vertical in lab Z; the unrotated surface is a line at theta.
+    beam_line = (np.zeros(2), np.asarray([depth_nm[0] / cosine,
+                                          depth_nm[-1] / cosine]))
+    surface_x = np.asarray([lateral_nm[0] * cosine, lateral_nm[-1] * cosine])
+    surface_line = (surface_x, surface_x * np.tan(theta))
+    return rotated.T, lab_x, lab_z, beam_line, surface_line
+
+
+def _write_heatmap_svg(output, values, x, y, title, x_label, y_label,
+                       *, beam_line=None, surface_line=None, equal_aspect=False):
     """Write a dependency-free vector heat map with axes and a color scale."""
     values = np.asarray(values, dtype=np.float64)
     if values.ndim != 2 or values.shape != (len(y), len(x)):
@@ -89,7 +176,12 @@ def _write_heatmap_svg(output, values, x, y, title, x_label, y_label):
         return '#fcffa4'
 
     width, height = 1000, 700
-    left, top, plot_width, plot_height = 115, 75, 720, 520
+    left, top = 115, 75
+    plot_width, plot_height = 720, 520
+    if equal_aspect and len(x) > 1 and len(y) > 1:
+        x_range, y_range = float(x[-1] - x[0]), float(y[-1] - y[0])
+        scale = min(720 / x_range, 520 / y_range)
+        plot_width, plot_height = x_range * scale, y_range * scale
     cell_width, cell_height = plot_width / len(x), plot_height / len(y)
     pieces = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
@@ -104,6 +196,19 @@ def _write_heatmap_svg(output, values, x, y, title, x_label, y_label):
             py = top + iy * cell_height
             pieces.append(f'<rect x="{px:.3f}" y="{py:.3f}" width="{cell_width+0.03:.3f}" height="{cell_height+0.03:.3f}" fill="{fill}"/>')
     pieces.append('</g>')
+    for line, line_color, dash, line_width in (
+        (surface_line, '#8eeaff', '', 2.5),
+        (beam_line, 'white', '7 5', 2.0),
+    ):
+        if line is not None:
+            line_x, line_y = line
+            points = ' '.join(
+                f'{left + (float(lx) - x[0]) / (x[-1] - x[0]) * plot_width:.2f},'
+                f'{top + (float(ly) - y[0]) / (y[-1] - y[0]) * plot_height:.2f}'
+                for lx, ly in zip(line_x, line_y)
+            )
+            dash_attr = f' stroke-dasharray="{dash}"' if dash else ''
+            pieces.append(f'<polyline points="{points}" fill="none" stroke="{line_color}" stroke-width="{line_width}"{dash_attr}/>')
     pieces.append(f'<rect x="{left}" y="{top}" width="{plot_width}" height="{plot_height}" fill="none" stroke="#222" stroke-width="1"/>')
 
     def tick_text(value):
@@ -141,7 +246,8 @@ def _write_heatmap_svg(output, values, x, y, title, x_label, y_label):
     output.write_text('\n'.join(pieces), encoding='utf-8')
 
 
-def export_penetration_heatmap(monte_carlo, output, view='auto', svg_output=None):
+def export_penetration_heatmap(monte_carlo, output, view='auto', svg_output=None,
+                               tilt_deg=None, fit_aspect=False):
     """Write a self-contained interactive electron-penetration heat map."""
     try:
         import plotly.graph_objects as go
@@ -156,23 +262,35 @@ def export_penetration_heatmap(monte_carlo, output, view='auto', svg_output=None
         profile, lateral_nm, depth_nm = read_interaction_map(monte_carlo)
         if profile.max() <= 0:
             raise ValueError('accum_path contains no scattering events to display')
+        angle = read_sample_tilt(monte_carlo) if tilt_deg is None else float(tilt_deg)
+        if not np.isfinite(angle) or abs(angle) >= 90:
+            raise ValueError('Tilt angle must be finite and between -90 and 90 degrees')
+        profile, lateral_nm, depth_nm, beam_line, surface_line = tilt_interaction_map(
+            profile, lateral_nm, depth_nm, angle)
         logged = np.log10(profile.T + 1)
         svg_values, svg_x, svg_y = profile.T, lateral_nm, depth_nm
-        svg_title = 'Electron interaction volume (Monte Carlo scatter events)'
-        svg_x_label = 'Lateral distance from incident beam axis (nm)'
-        svg_y_label = 'Depth below sample surface (nm)'
+        aspect_note = ' (display fitted; angle not to scale)' if fit_aspect else ''
+        svg_title = f'Electron interaction volume (lab frame; sample surface {angle:g}°){aspect_note}'
+        svg_x_label = 'Lab X (nm)'
+        svg_y_label = 'Lab Z / gravity direction (nm)'
         heatmap = go.Heatmap(x=lateral_nm, y=depth_nm, z=logged,
             customdata=profile.T, colorscale='Inferno',
             colorbar=dict(title='log10(scatter events + 1)'),
             hovertemplate='Depth: %{y:.4g} nm<br>Lateral distance: %{x:.4g} nm'
                           '<br>Scatter events: %{customdata:.0f}<extra></extra>')
-        figure = go.Figure(data=[heatmap])
-        figure.update_layout(title='Electron interaction volume (Monte Carlo scatter events)',
-            xaxis_title='Lateral distance from incident beam axis (nm)',
-            yaxis_title='Depth below sample surface (nm)',
+        beam = go.Scatter(x=beam_line[0], y=beam_line[1], mode='lines', name='Vertical beam / lab Z',
+                          line=dict(color='white', dash='dash', width=2), hoverinfo='skip')
+        surface = go.Scatter(x=surface_line[0], y=surface_line[1], mode='lines',
+                             name='Sample surface',
+                             line=dict(color='#8eeaff', width=2), hoverinfo='skip')
+        figure = go.Figure(data=[heatmap, surface, beam])
+        figure.update_layout(title=svg_title,
+            xaxis_title='Lab X (nm)',
+            yaxis_title='Lab Z / gravity direction (nm)',
+            xaxis=(dict() if fit_aspect else dict(scaleanchor='y', scaleratio=1)),
             yaxis=dict(autorange='reversed'),
             margin=dict(l=85, r=35, t=65, b=75),
-            annotations=[dict(text='Cross-section in the beam-tilt plane; logarithmic color scale; hover shows event counts.',
+            annotations=[dict(text=f'Lab-frame view; sample surface at {angle:g}° to horizontal; dashed line is vertical beam / gravity Z; logarithmic colors show binned scatter-event counts.' + (' Display fitted to panel; apparent angle is not to scale.' if fit_aspect else ''),
                                x=0, y=-.25, xref='paper', yref='paper', showarrow=False,
                                xanchor='left')])
     elif view == 'depth-energy':
@@ -205,7 +323,10 @@ def export_penetration_heatmap(monte_carlo, output, view='auto', svg_output=None
     if svg_output is not None:
         svg_output = Path(svg_output)
         _write_heatmap_svg(svg_output, svg_values, svg_x, svg_y,
-                           svg_title, svg_x_label, svg_y_label)
+                           svg_title, svg_x_label, svg_y_label,
+                           beam_line=beam_line if view == 'interaction' else None,
+                           surface_line=surface_line if view == 'interaction' else None,
+                           equal_aspect=view == 'interaction' and not fit_aspect)
         print(f'Static SVG heat map: {svg_output}', flush=True)
 
 
@@ -219,9 +340,14 @@ def main():
                         help='Auto-select trajectory cross-section when available; otherwise legacy depth-vs-energy')
     parser.add_argument('--svg', type=Path,
                         help='Optional path for an additional static vector SVG export')
+    parser.add_argument('--tilt-deg', type=float,
+                        help='Sample-frame display tilt in degrees; defaults to MC metadata')
+    parser.add_argument('--fit-aspect', action='store_true',
+                        help='Fill the plot panel; apparent geometry is not to scale')
     args = parser.parse_args()
     export_penetration_heatmap(args.monte_carlo.resolve(strict=True), args.output.resolve(),
-                               args.view, args.svg.resolve() if args.svg else None)
+                               args.view, args.svg.resolve() if args.svg else None,
+                               args.tilt_deg, args.fit_aspect)
 
 
 if __name__ == '__main__':

@@ -5,9 +5,9 @@
 #SBATCH --partition=camas
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --time=12:00:00
 #SBATCH --output=mc-interaction-volume-%j.log
 
@@ -19,6 +19,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 
 export KIKUCHIPY_CUDA_ROOT="${KIKUCHIPY_CUDA_ROOT:-$HOME/kikuchipyCUDA}"
 conda activate "${KIKUCHIPY_CUDA_ENV:-$KIKUCHIPY_CUDA_ROOT/KikuchiPyCUDA}"
+python_bin="$CONDA_PREFIX/bin/python"
 cd "$KIKUCHIPY_CUDA_ROOT/dictionary-indexing-cuda"
 
 : "${KIKUCHIPY_CUDA_CRYSTAL:?Set KIKUCHIPY_CUDA_CRYSTAL to an HDF5 file containing CrystalData}"
@@ -34,7 +35,7 @@ export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
 echo "Generating tracked Monte Carlo trajectories from $KIKUCHIPY_CUDA_CRYSTAL"
-srun --ntasks=1 python -m emsoft_di.monte_carlo \
+srun --ntasks=1 "$python_bin" -m emsoft_di.monte_carlo \
   --crystal "$KIKUCHIPY_CUDA_CRYSTAL" \
   --output "$mc_file" \
   --electrons "$KIKUCHIPY_CUDA_MC_ELECTRONS" \
@@ -43,16 +44,17 @@ srun --ntasks=1 python -m emsoft_di.monte_carlo \
   --energy-bin-kev "${KIKUCHIPY_CUDA_MC_ENERGY_BIN_KEV:-1}" \
   --depth-max-nm "${KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM:-100}" \
   --depth-step-nm "${KIKUCHIPY_CUDA_MC_DEPTH_STEP_NM:-1}" \
+  --lateral-max-nm "${KIKUCHIPY_CUDA_MC_LATERAL_MAX_NM:-${KIKUCHIPY_CUDA_MC_DEPTH_MAX_NM:-100}}" \
   --detector-size "${KIKUCHIPY_CUDA_MC_DETECTOR_SIZE:-501}" \
   --sample-tilt-deg "${KIKUCHIPY_CUDA_MC_TILT_DEG:-70}" \
   --omega-deg "${KIKUCHIPY_CUDA_MC_OMEGA_DEG:-0}" \
   --steps "${KIKUCHIPY_CUDA_MC_STEPS:-300}" \
   --seed "${KIKUCHIPY_CUDA_MC_SEED:-20261022}" \
   --batch-electrons "${KIKUCHIPY_CUDA_MC_BATCH:-262144}" \
-  --devices 0 1
+  --devices 0
 
 echo "Exporting interactive HTML and static SVG interaction-volume maps"
-srun --ntasks=1 python -m emsoft_di.master.volume \
+srun --ntasks=1 "$python_bin" -m emsoft_di.master.volume \
   --monte-carlo "$mc_file" \
   --output "$html_file" \
   --svg "$svg_file" \
