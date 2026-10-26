@@ -523,7 +523,7 @@ def run(settings, crystal_source, output, devices=(0, 1), backend='cuda'):
         nx = (settings.detector_size-1)//2
         accum_z64 = np.zeros((2*(nx//10)+1, 2*(nx//10)+1,
                               settings.depth_bins, settings.energy_bins), dtype=np.uint64)
-        path_radius = math.ceil(settings.depth_max_nm / settings.depth_step_nm)
+        path_radius = settings.lateral_radius
         accum_path64 = np.zeros((2*path_radius+1, settings.depth_bins), dtype=np.uint64)
         for device in devices:
             shard = work/f'mc-gpu-{device}.npz'
@@ -531,7 +531,13 @@ def run(settings, crystal_source, output, devices=(0, 1), backend='cuda'):
                 with np.load(shard) as f:
                     accum_e64 += f['accum_e']
                     accum_z64 += f['accum_z']
-                    accum_path64 += f['accum_path']
+                    path_shard = f['accum_path']
+                    if path_shard.shape != accum_path64.shape:
+                        raise ValueError(
+                            f'GPU {device} trajectory-map shape {path_shard.shape} does not '
+                            f'match configured shape {accum_path64.shape}; check lateral range settings'
+                        )
+                    accum_path64 += path_shard
         elapsed = time.perf_counter()-start
         if (np.any(accum_e64 > np.iinfo(np.int32).max) or
                 np.any(accum_z64 > np.iinfo(np.int32).max) or
