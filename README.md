@@ -1,10 +1,12 @@
 # GPU EBSD dictionary indexing on HPC
 
-Generate an EBSD master pattern and dictionary, then match experimental
+Load a bundled SHT master, use an existing HDF5 master, or generate a master from a crystal structure. Project a dictionary and match experimental
 patterns on NVIDIA GPUs. The pipeline uses a Python dynamical master generator,
 kikuchipy 0.13.1 detector geometry, a CuPy projector and a batched NCC matcher.
 Two GPUs project the dictionary and dynamically claim experimental-pattern
 chunks during matching, so a GPU that finishes one chunk can take the next.
+
+The CuPy projector derives from the EMsoft port and uses kikuchipy detector geometry. The HPC matcher implements normalized cross-correlation in CuPy.
 
 The Python import name remains `emsoft_di`. The repository folder can have any
 name. Upstream EMsoft attribution and license are retained in `LICENSE`.
@@ -30,8 +32,7 @@ Monte Carlo HDF5. Python-generated Monte Carlo output also records scattering-
 event positions for an x-z cross-section of the electron interaction volume.
 Its interactive HTML map uses logarithmic color and shows event counts on hover.
 Legacy EMsoft files without trajectory positions retain the depth-by-energy heat
-map. These inputs
-are not included in the repository. This workflow assumes alternating hex-row scan coordinates and a rectangular
+map. Supply your own experimental UP1 and matching ANG scan. The repository includes example crystals and 600 EBSD masters in the [SHT database](SHTdatabase-master/EBSD). This workflow assumes alternating hex-row scan coordinates and a rectangular
 UP1 raster. It is not a generic reader for every vendor scan layout; validate
 the coordinate mapping for your acquisition.
 
@@ -55,6 +56,43 @@ do not recreate it. The environment uses Python 3.11, kikuchipy 0.13.1,
 diffpy.structure and CuPy 13.6.0 for CUDA 12.x. The system Python module is not
 needed. On the tested compute node, its Python 3.11.4 installation could not
 find `libffi.so.6`.
+
+### Index with a bundled SHT master
+
+From the repository root, with the HPC Conda environment active, compile the
+decoder once. The [SHTfile header](tools/sht/sht_file.hpp) and its license are
+included. The decoder verifies the checksum and unpacks the harmonic coefficients.
+
+```bash
+module load gcc
+c++ -std=c++14 -O2 tools/sht/read_sht.cpp -o "$CONDA_PREFIX/bin/emsoft-di-read-sht"
+```
+
+Choose a [database file](SHTdatabase-master/EBSD) matching the phase and beam
+voltage of your scan. For nickel at 20 kV, run these commands from the repository
+root. Keep the absolute path quoted because the batch job changes directories.
+
+```bash
+sht_master="$PWD/SHTdatabase-master/EBSD/Cubic/Ni (nickel) [A1]/Ni (nickel) [A1] {20kV}.sht"
+python -m emsoft_di.hpc --master "$sht_master" --dry-run --output "$HOME/kikuchipyCUDA/input-check"
+sbatch hpc/submit_two_gpu.slurm --master "$sht_master"
+```
+
+The dry run reads the experimental inputs and reconstructs the master on CPU.
+The batch command submits the 128-pattern pilot. After reviewing it, submit
+the full scan with the same master:
+
+```bash
+sbatch hpc/submit_two_gpu.slurm --master "$sht_master" --limit 0 --resolution 1
+```
+
+Python synthesizes north and south square Lambert maps in memory. The SHT
+retains the simulation beam voltage and contains one angular intensity pattern.
+Separate electron energy bins cannot be recovered. The loader therefore skips
+Monte Carlo weighting and uses the file’s effective space group for orientation
+sampling. This indexing route starts directly from the SHT and requires no H5
+conversion or master-generation job. See the [database attribution](SHTdatabase-master/README.md)
+and [license](SHTdatabase-master/LICENSE).
 
 ## 3. Check inputs and run tests
 
@@ -284,7 +322,7 @@ To enable neighbour pattern averaging (NPA) on the combined pipeline, add
 sbatch hpc/submit_master_then_index.slurm --resolution 1 --npa
 ```
 
-NPA averages each preprocessed pattern with adjacent ANG scan points: up to six
+Our CPU preprocessing code averages each preprocessed pattern with adjacent ANG scan points: up to six
 nearest neighbours on staggered hex grids or eight on square/raster grids. It
 may improve signal quality, but increases the effective interaction area and can reduce spatial
 resolution. NPA is off by default.
@@ -472,7 +510,7 @@ job establishes pipeline execution, not scientific indexing accuracy or a
 performance guarantee. Review experimental/simulated pattern agreement and
 validate orientations independently before interpreting results.
 
-Master energy integration uses spatially summed Monte Carlo energy weights, an
+For energy-resolved HDF5 input, master energy integration uses spatially summed Monte Carlo energy weights, an
 approximation to detector-dependent weighting. `--energy-mode highest-bin` is
 available as an alternative. The highest available master bin may differ from the simulation voltage. Gaussian background subtraction is
 applied to both dictionary and experimental patterns; sigma defaults to 3 binned
@@ -494,20 +532,3 @@ python examples/match_synthetic.py --device cpu
 GitHub Actions runs CPU checks. GPU validation requires NVIDIA hardware.
 Experimental data, environments, dictionaries, results and logs are excluded
 through `.gitignore`.
-
-### Using a database SHT master
-
-The [SHTfile](https://github.com/EMsoft-org/SHTfile) library is bundled in
-`tools/sht/sht_file.hpp` with its original license notice.
-From the repository root with the HPC environment active, build the bundled
-SHTfile decoder once on the cluster:
-
-```sh
-c++ -std=c++14 -O2 tools/sht/read_sht.cpp -o "$CONDA_PREFIX/bin/emsoft-di-read-sht"
-```
-
-Pass the database file directly to the indexing command with
-`--master '/path/to/phase {20kV}.sht'`. The reader synthesizes both square
-Lambert hemispheres in memory, records the source beam voltage and samples
-orientations using the effective space group. H5 energy-mode settings apply
-only to H5 input. Use a master matching the experimental beam voltage.

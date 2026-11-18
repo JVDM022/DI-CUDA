@@ -59,6 +59,21 @@ The defaults use
 the files in `~/kikuchipyCUDA`. Install `.[hpc]` and
 `cupy-cuda12x==13.6.0` in the existing Conda environment with CUDA 12.2 loaded.
 
+The `--master` argument accepts a database `.sht` file or an HDF5 master.
+For SHT input, `load_master(path, mode)` invokes the bundled C++ decoder
+through `emsoft-di-read-sht` on PATH. Python synthesizes two float32 square
+Lambert maps with side length `2 * bandwidth + 1` and returns a kikuchipy
+`EBSDMasterPattern` and metadata containing `mode="sht"`, `source`,
+`bandwidth`, and `voltage_kV`. The effective space group sets the phase
+symmetry. Both HDF5 energy modes use this same SHT path without reweighting.
+See the [decoder build, dry run and Slurm examples](../README.md#index-with-a-bundled-sht-master).
+
+The EMsoft-derived CuPy projector uses kikuchipy detector geometry. The HPC
+matcher computes normalized cross-correlation in CuPy. Optional `--npa`
+uses the project's own CPU preprocessing to average the center pattern with
+available scan neighbors, up to six on hex grids or eight on square grids,
+before GPU matching.
+
 On the allocated GPU node, after uploading the updated package:
 
 ```bash
@@ -103,14 +118,14 @@ sbatch hpc/submit_two_gpu.slurm --limit 0 --resolution 1
 ```
 
 One degree is a configurable initial sampling choice, not a validated accuracy
-target. There is no orientation refinement or automatic ANG export. Fine
+target. The run exports ANG automatically. Orientation refinement is unavailable. Fine
 sampling can require substantial disk space and runtime: the script prints the
 dictionary count and disk size before projecting. It does not resume incomplete
 runs or overwrite output directories. Keep failed shards for diagnosis and use
 a new output directory when retrying. There is no automatic reuse of dictionaries
 between runs. Runtime must be measured on the target GPUs.
 
-Energy integration uses **spatially summed Monte Carlo energy weights** by
+For energy-resolved HDF5 masters, energy integration uses **spatially summed Monte Carlo energy weights** by
 default (`--energy-mode mc-global`). This is an explicit approximation; it does
 not model detector-position-dependent energy distributions. Weights, energies
 and settings are saved. `--energy-mode highest-bin` selects the highest available
