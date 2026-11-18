@@ -1,0 +1,2 @@
+include tools/sht/read_sht.cpp tools/sht/sht_file.hpp
+graft SHTdatabase-master

@@ -134,6 +134,9 @@ def preprocess_with_npa(raw, indices, binning, sigma, neighbor_indices):
 
 def load_master(path, mode):
     """Use kikuchipy's reader to retain master axis conventions and phase."""
+    if Path(path).suffix.lower() == ".sht":
+        from .master.sht import load_sht_master
+        return load_sht_master(path)
     import h5py
     import kikuchipy as kp
     with h5py.File(path, 'r') as f:
@@ -518,6 +521,10 @@ def main():
                                             calibration['XSTEP'], calibration['YSTEP'])
             kind = 'hex' if neighbors.shape[1] == 7 else 'square/raster'
             print(f'NPA scan layout validated: {kind}; neighbor table {neighbors.shape}', flush=True)
+        if Path(args.master).suffix.lower() == ".sht":
+            master, info = load_master(args.master, args.energy_mode)
+            print("SHT master:", master.data.shape, info, flush=True)
+            return
         import h5py
         with h5py.File(args.master) as f:
             print('Master:', f['EMData/EBSDmaster/mLPNH'].shape,

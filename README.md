@@ -494,3 +494,20 @@ python examples/match_synthetic.py --device cpu
 GitHub Actions runs CPU checks. GPU validation requires NVIDIA hardware.
 Experimental data, environments, dictionaries, results and logs are excluded
 through `.gitignore`.
+
+### Using a database SHT master
+
+The [SHTfile](https://github.com/EMsoft-org/SHTfile) library is bundled in
+`tools/sht/sht_file.hpp` with its original license notice.
+From the repository root with the HPC environment active, build the bundled
+SHTfile decoder once on the cluster:
+
+```sh
+c++ -std=c++14 -O2 tools/sht/read_sht.cpp -o "$CONDA_PREFIX/bin/emsoft-di-read-sht"
+```
+
+Pass the database file directly to the indexing command with
+`--master '/path/to/phase {20kV}.sht'`. The reader synthesizes both square
+Lambert hemispheres in memory, records the source beam voltage and samples
+orientations using the effective space group. H5 energy-mode settings apply
+only to H5 input. Use a master matching the experimental beam voltage.
