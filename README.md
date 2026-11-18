@@ -60,7 +60,7 @@ find `libffi.so.6`.
 ### Index with a bundled SHT master
 
 From the repository root, with the HPC Conda environment active, compile the
-decoder once. The [SHTfile header](tools/sht/sht_file.hpp) and its license are
+decoder once for the login-node dry run. The indexing batch job builds its own copy on scratch for SHT input. The [SHTfile header](tools/sht/sht_file.hpp) and its license are
 included. The decoder verifies the checksum and unpacks the harmonic coefficients.
 
 ```bash
@@ -491,8 +491,17 @@ the NCC scores and validity flags remain in `indexed.h5`.
 The root `complete` attribute must be true. Blank patterns retain their rows with
 invalid flags, -1 indices, and NaN scores/orientations. A pilot's unprocessed
 points are marked phase `-1` in `indexed.ang`.
-The output folder also contains `run.json`, the dictionary, energy weights and
-per-GPU projection-check reports.
+Both Slurm launchers create a fresh Kamiak workspace with `mkworkspace`.
+The projected dictionary, GPU shards, and intermediate arrays stay there.
+The combined job also places its generated master and default generated Monte
+Carlo HDF5 there. Find the path in the job log. Kamiak limits scratch to 10 TB
+per user and removes workspaces after two weeks. Copy reusable masters before expiry.
+
+After indexing succeeds, the launcher publishes `indexed.h5`, `indexed.ang`,
+`run.json`, and the per-GPU projection checks together under
+`~/kikuchipyCUDA/dictionary-run-JOBID/` by default. An explicit `--output`
+changes the final destination. If copying fails, the completed results remain
+in the scratch workspace's `index/` folder until expiry.
 
 ## Plotting with MTEX
 

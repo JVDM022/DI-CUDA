@@ -8,6 +8,8 @@ import json
 import multiprocessing as multiprocessing
 import os
 from pathlib import Path
+import shutil
+import tempfile
 import struct
 
 import numpy as np
@@ -477,6 +479,21 @@ def merge(args, devices, count, metadata, calibration):
     print(f'ANG map: {output / "indexed.ang"}', flush=True)
 
 
+def publish_results(work, destination, devices):
+    """Stage on the destination filesystem so incomplete copies stay unpublished."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=destination.parent, prefix='.di-copy-') as staging:
+        ready = Path(staging) / 'results'
+        ready.mkdir()
+        names = ['indexed.h5', 'indexed.ang', 'run.json']
+        names.extend(f'projection-check-gpu-{i}.json' for i in range(devices))
+        for name in names:
+            shutil.copy2(work / name, ready / name)
+        if destination.exists():
+            raise FileExistsError(destination)
+        ready.rename(destination)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     base = Path(os.environ.get('KIKUCHIPY_CUDA_ROOT', str(Path.home() / 'kikuchipyCUDA')))
@@ -484,6 +501,7 @@ def main():
     parser.add_argument('--master', type=Path, default=base/'master.h5')
     parser.add_argument('--ang', type=Path, default=base/'scan.ang')
     parser.add_argument('--output', type=Path, required=True, help='New directory, must not already exist')
+    parser.add_argument('--work-dir', type=Path, help='New working directory for the dictionary and GPU shards')
     parser.add_argument('--devices', type=int, default=2, choices=(1, 2))
     parser.add_argument('--limit', type=int, default=128, help='Patterns to index; 0 means full scan')
     parser.add_argument('--resolution', type=float, default=3.0, help='Orientation sampling degrees; 3 is a coarse pilot')
@@ -534,6 +552,9 @@ def main():
     if cp.cuda.runtime.getDeviceCount() < args.devices:
         raise RuntimeError('Requested GPUs are not visible; run inside a Slurm GPU allocation')
     # Do not create a CUDA context before spawning GPU workers.
+    destination = args.output
+    if args.work_dir is not None:
+        args.output = args.work_dir.resolve()
     args.output.mkdir(parents=True)
     options = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     options['run_id'] = hashlib.sha256(os.urandom(32)).hexdigest()
@@ -562,7 +583,9 @@ def main():
     if any(p.exitcode != 0 for p in processes):
         raise RuntimeError('GPU worker failed; shards preserved, no final result published')
     merge(args, args.devices, count, metadata, calibration)
-    print(f'Completed: {args.output / "indexed.h5"}', flush=True)
+    if args.work_dir is not None:
+        publish_results(args.output, destination, args.devices)
+    print(f'Completed: {destination / "indexed.h5"}', flush=True)
 
 
 if __name__ == '__main__':

@@ -22,6 +22,11 @@ conda activate "${KIKUCHIPY_CUDA_ENV:-$KIKUCHIPY_CUDA_ROOT/KikuchiPyCUDA}"
 python_bin="$CONDA_PREFIX/bin/python"
 cd "$KIKUCHIPY_CUDA_ROOT/dictionary-indexing-cuda"
 
+scratch_dir="$(mkworkspace -n "di-${SLURM_JOB_ID}")"
+[[ "$scratch_dir" == /scratch/* && -d "$scratch_dir" && -w "$scratch_dir" ]] || { echo "Invalid scratch workspace: $scratch_dir" >&2; exit 1; }
+echo "Kamiak scratch workspace: $scratch_dir"
+export TMPDIR="$scratch_dir/tmp"
+mkdir "$TMPDIR"
 export MPLBACKEND=Agg
 export OMP_NUM_THREADS=4
 export OPENBLAS_NUM_THREADS=1
@@ -37,7 +42,7 @@ if [[ -n "${KIKUCHIPY_CUDA_CRYSTAL:-}" ]]; then
   master_stage=2
   index_stage=3
   stage_total=3
-  mc_file="${KIKUCHIPY_CUDA_MC_OUTPUT:-$KIKUCHIPY_CUDA_ROOT/monte-carlo-python-${SLURM_JOB_ID}.h5}"
+  mc_file="${KIKUCHIPY_CUDA_MC_OUTPUT:-$scratch_dir/monte-carlo-python-${SLURM_JOB_ID}.h5}"
   echo "Stage 1/3: Python/CuPy Monte Carlo generation from $KIKUCHIPY_CUDA_CRYSTAL"
   srun --ntasks=1 "$python_bin" -m emsoft_di.monte_carlo \
     --crystal "$KIKUCHIPY_CUDA_CRYSTAL" \
@@ -61,7 +66,7 @@ else
 fi
 pattern_file="${KIKUCHIPY_CUDA_PATTERNS:-$KIKUCHIPY_CUDA_ROOT/patterns.up1}"
 ang_file="${KIKUCHIPY_CUDA_ANG:-$KIKUCHIPY_CUDA_ROOT/scan.ang}"
-master_file="$KIKUCHIPY_CUDA_ROOT/python-master-${SLURM_JOB_ID}.h5"
+master_file="$scratch_dir/python-master-${SLURM_JOB_ID}.h5"
 result_dir="$KIKUCHIPY_CUDA_ROOT/dictionary-run-${SLURM_JOB_ID}"
 penetration_map="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.html"
 penetration_svg="$KIKUCHIPY_CUDA_ROOT/monte-carlo-penetration-${SLURM_JOB_ID}.svg"
@@ -87,7 +92,7 @@ srun --ntasks=1 "$python_bin" -m emsoft_di.hpc \
   --patterns "$pattern_file" \
   --master "$master_file" \
   --ang "$ang_file" \
-  --output "$result_dir" \
+  --work-dir "$scratch_dir/index" --output "$result_dir" \
   --devices 2 --limit 0 --resolution 1 "$@"
 
 echo "Pipeline complete: $result_dir/indexed.h5"

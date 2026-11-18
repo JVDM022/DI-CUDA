@@ -96,8 +96,7 @@ matching use float32. Only the small reference check uses CPU projection.
 
 Output is `dictionary-run-JOBID/` beside the inputs, including `indexed.h5` and
 an automatically scan-mapped `indexed.ang`,
-`run.json`, a disk-backed dictionary, quaternions, Bunge Euler angles in radians,
-and intermediate GPU shards. Logs go to `dictionary-indexing-JOBID.log` in the
+`run.json`, and the projection checks. The Slurm launchers pass `--work-dir` on Kamiak scratch for the disk-backed dictionary and GPU shards. Direct CLI runs without this option keep all files in `--output`. Logs go to `dictionary-indexing-JOBID.log` in the
 submission directory. Blank experimental patterns have `valid=False`, NaN
 scores and orientations, and simulation indices -1. These rows are preserved.
 `ang_mapping/pattern_index` maps ANG rows to original UP1 indices; for pilot
