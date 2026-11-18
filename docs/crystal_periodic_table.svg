@@ -1,604 +1,604 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="790" viewBox="0 0 1200 790" role="img" aria-labelledby="title desc">
 <title id="title">KikuchiCUDA crystal periodic table</title>
-<desc id="desc">Nickel and aluminium are green because crystal files are included in the repository. Other elements are gray because no crystal file has been added for them yet.</desc>
+<desc id="desc">Bundled elemental crystal structures and SHT master coverage. Purple elements occur only in compound masters.</desc>
 <rect width="100%" height="100%" fill="#111418"/>
 <text x="28" y="43" fill="#f3f5f7" font-family="system-ui, sans-serif" font-size="30" font-weight="700">KikuchiCUDA crystal map</text>
-<text x="28" y="72" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="15">Green = crystal file created · Gray = no crystal file in this repository yet</text>
-<rect x="28" y="87" width="16" height="16" rx="2" fill="#138a3e" stroke="#35dc76"/>
-<text x="52" y="100" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="13">Created</text>
-<rect x="130" y="87" width="16" height="16" rx="2" fill="#626b77" stroke="#252b33"/>
-<text x="154" y="100" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="13">Search COD</text>
-<g><rect x="28" y="112" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<text x="28" y="72" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="15">Bundled EBSD inputs · 600 master patterns · 42 elements with elemental masters</text>
+<rect x="28" y="87" width="16" height="16" fill="#138a3e"/><text x="51" y="100" fill="#fff" font-family="system-ui, sans-serif" font-size="13">Crystal + SHT</text>
+<rect x="248" y="87" width="16" height="16" fill="#166599"/><text x="271" y="100" fill="#fff" font-family="system-ui, sans-serif" font-size="13">Elemental SHT</text>
+<rect x="468" y="87" width="16" height="16" fill="#76438c"/><text x="491" y="100" fill="#fff" font-family="system-ui, sans-serif" font-size="13">Compound SHT only</text>
+<rect x="688" y="87" width="16" height="16" fill="#505965"/><text x="711" y="100" fill="#fff" font-family="system-ui, sans-serif" font-size="13">No bundled files</text>
+<g><rect x="28" y="112" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="33" y="124" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">1</text>
 <text x="33" y="146" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">H</text>
 <text x="33" y="161" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Hydrogen</text>
 </g>
-<g><rect x="1133" y="112" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="112" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="124" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">2</text>
 <text x="1138" y="146" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">He</text>
 <text x="1138" y="161" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Helium</text>
 </g>
-<g><rect x="28" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="177" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="33" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">3</text>
 <text x="33" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Li</text>
 <text x="33" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Lithium</text>
 </g>
-<g><rect x="93" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="177" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="98" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">4</text>
 <text x="98" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Be</text>
 <text x="98" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Beryllium</text>
 </g>
-<g><rect x="808" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="177" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="813" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">5</text>
 <text x="813" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">B</text>
 <text x="813" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Boron</text>
 </g>
-<g><rect x="873" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="177" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="878" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">6</text>
 <text x="878" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">C</text>
 <text x="878" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Carbon</text>
 </g>
-<g><rect x="938" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="177" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="943" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">7</text>
 <text x="943" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">N</text>
 <text x="943" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Nitrogen</text>
 </g>
-<g><rect x="1003" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="177" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1008" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">8</text>
 <text x="1008" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">O</text>
 <text x="1008" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Oxygen</text>
 </g>
-<g><rect x="1068" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="177" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1073" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">9</text>
 <text x="1073" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">F</text>
 <text x="1073" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Fluorine</text>
 </g>
-<g><rect x="1133" y="177" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="177" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="189" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">10</text>
 <text x="1138" y="211" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ne</text>
 <text x="1138" y="226" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Neon</text>
 </g>
-<g><rect x="28" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="242" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="33" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">11</text>
 <text x="33" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Na</text>
 <text x="33" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Sodium</text>
 </g>
-<g><rect x="93" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="242" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="98" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">12</text>
 <text x="98" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Mg</text>
 <text x="98" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Magnesium</text>
 </g>
-<g><rect x="808" y="242" width="58" height="58" rx="3" fill="#138a3e" stroke="#35dc76"/>
+<g><rect x="808" y="242" width="58" height="58" rx="3" fill="#138a3e" stroke="#252b33"/>
 <text x="813" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">13</text>
 <text x="813" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Al</text>
 <text x="813" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Aluminium</text>
 <text x="853" y="255" fill="#ffffff" font-family="system-ui, sans-serif" font-size="10" font-weight="800">✓</text>
 </g>
-<g><rect x="873" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="242" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="878" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">14</text>
 <text x="878" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Si</text>
 <text x="878" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Silicon</text>
 </g>
-<g><rect x="938" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="242" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="943" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">15</text>
 <text x="943" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">P</text>
 <text x="943" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Phosphorus</text>
 </g>
-<g><rect x="1003" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="242" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1008" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">16</text>
 <text x="1008" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">S</text>
 <text x="1008" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Sulfur</text>
 </g>
-<g><rect x="1068" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="242" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1073" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">17</text>
 <text x="1073" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cl</text>
 <text x="1073" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Chlorine</text>
 </g>
-<g><rect x="1133" y="242" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="242" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="254" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">18</text>
 <text x="1138" y="276" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ar</text>
 <text x="1138" y="291" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Argon</text>
 </g>
-<g><rect x="28" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="307" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="33" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">19</text>
 <text x="33" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">K</text>
 <text x="33" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Potassium</text>
 </g>
-<g><rect x="93" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="307" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="98" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">20</text>
 <text x="98" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ca</text>
 <text x="98" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Calcium</text>
 </g>
-<g><rect x="158" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="158" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="163" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">21</text>
 <text x="163" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sc</text>
 <text x="163" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Scandium</text>
 </g>
-<g><rect x="223" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="228" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">22</text>
 <text x="228" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ti</text>
 <text x="228" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Titanium</text>
 </g>
-<g><rect x="288" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="293" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">23</text>
 <text x="293" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">V</text>
 <text x="293" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Vanadium</text>
 </g>
-<g><rect x="353" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="358" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">24</text>
 <text x="358" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cr</text>
 <text x="358" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Chromium</text>
 </g>
-<g><rect x="418" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="423" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">25</text>
 <text x="423" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Mn</text>
 <text x="423" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Manganese</text>
 </g>
-<g><rect x="483" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="488" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">26</text>
 <text x="488" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Fe</text>
 <text x="488" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Iron</text>
 </g>
-<g><rect x="548" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="553" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">27</text>
 <text x="553" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Co</text>
 <text x="553" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Cobalt</text>
 </g>
-<g><rect x="613" y="307" width="58" height="58" rx="3" fill="#138a3e" stroke="#35dc76"/>
+<g><rect x="613" y="307" width="58" height="58" rx="3" fill="#138a3e" stroke="#252b33"/>
 <text x="618" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">28</text>
 <text x="618" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ni</text>
 <text x="618" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Nickel</text>
 <text x="658" y="320" fill="#ffffff" font-family="system-ui, sans-serif" font-size="10" font-weight="800">✓</text>
 </g>
-<g><rect x="678" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="683" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">29</text>
 <text x="683" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cu</text>
 <text x="683" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Copper</text>
 </g>
-<g><rect x="743" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="748" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">30</text>
 <text x="748" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Zn</text>
 <text x="748" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Zinc</text>
 </g>
-<g><rect x="808" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="307" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="813" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">31</text>
 <text x="813" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ga</text>
 <text x="813" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Gallium</text>
 </g>
-<g><rect x="873" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="307" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="878" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">32</text>
 <text x="878" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ge</text>
 <text x="878" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Germanium</text>
 </g>
-<g><rect x="938" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="307" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="943" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">33</text>
 <text x="943" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">As</text>
 <text x="943" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Arsenic</text>
 </g>
-<g><rect x="1003" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="307" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1008" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">34</text>
 <text x="1008" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Se</text>
 <text x="1008" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Selenium</text>
 </g>
-<g><rect x="1068" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="307" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">35</text>
 <text x="1073" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Br</text>
 <text x="1073" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Bromine</text>
 </g>
-<g><rect x="1133" y="307" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="307" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="319" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">36</text>
 <text x="1138" y="341" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Kr</text>
 <text x="1138" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Krypton</text>
 </g>
-<g><rect x="28" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="372" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="33" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">37</text>
 <text x="33" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Rb</text>
 <text x="33" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Rubidium</text>
 </g>
-<g><rect x="93" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="98" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">38</text>
 <text x="98" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sr</text>
 <text x="98" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Strontium</text>
 </g>
-<g><rect x="158" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="158" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="163" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">39</text>
 <text x="163" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Y</text>
 <text x="163" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Yttrium</text>
 </g>
-<g><rect x="223" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="228" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">40</text>
 <text x="228" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Zr</text>
 <text x="228" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Zirconium</text>
 </g>
-<g><rect x="288" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="293" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">41</text>
 <text x="293" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Nb</text>
 <text x="293" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Niobium</text>
 </g>
-<g><rect x="353" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="358" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">42</text>
 <text x="358" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Mo</text>
 <text x="358" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Molybdenum</text>
 </g>
-<g><rect x="418" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="372" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="423" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">43</text>
 <text x="423" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Tc</text>
 <text x="423" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Technetium</text>
 </g>
-<g><rect x="483" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="488" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">44</text>
 <text x="488" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ru</text>
 <text x="488" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Ruthenium</text>
 </g>
-<g><rect x="548" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="553" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">45</text>
 <text x="553" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Rh</text>
 <text x="553" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Rhodium</text>
 </g>
-<g><rect x="613" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="613" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="618" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">46</text>
 <text x="618" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pd</text>
 <text x="618" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Palladium</text>
 </g>
-<g><rect x="678" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="683" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">47</text>
 <text x="683" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ag</text>
 <text x="683" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Silver</text>
 </g>
-<g><rect x="743" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="748" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">48</text>
 <text x="748" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cd</text>
 <text x="748" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Cadmium</text>
 </g>
-<g><rect x="808" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="813" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">49</text>
 <text x="813" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">In</text>
 <text x="813" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Indium</text>
 </g>
-<g><rect x="873" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="372" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="878" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">50</text>
 <text x="878" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sn</text>
 <text x="878" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Tin</text>
 </g>
-<g><rect x="938" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="372" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="943" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">51</text>
 <text x="943" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sb</text>
 <text x="943" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Antimony</text>
 </g>
-<g><rect x="1003" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="372" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="1008" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">52</text>
 <text x="1008" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Te</text>
 <text x="1008" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Tellurium</text>
 </g>
-<g><rect x="1068" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="372" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">53</text>
 <text x="1073" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">I</text>
 <text x="1073" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Iodine</text>
 </g>
-<g><rect x="1133" y="372" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="372" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="384" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">54</text>
 <text x="1138" y="406" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Xe</text>
 <text x="1138" y="421" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Xenon</text>
 </g>
-<g><rect x="28" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="437" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="33" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">55</text>
 <text x="33" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cs</text>
 <text x="33" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Caesium</text>
 </g>
-<g><rect x="93" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="98" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">56</text>
 <text x="98" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ba</text>
 <text x="98" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Barium</text>
 </g>
-<g><rect x="158" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="158" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="163" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">57</text>
 <text x="163" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">La</text>
 <text x="163" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Lanthanum</text>
 </g>
-<g><rect x="223" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="228" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">72</text>
 <text x="228" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Hf</text>
 <text x="228" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Hafnium</text>
 </g>
-<g><rect x="288" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="293" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">73</text>
 <text x="293" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ta</text>
 <text x="293" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Tantalum</text>
 </g>
-<g><rect x="353" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="358" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">74</text>
 <text x="358" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">W</text>
 <text x="358" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Tungsten</text>
 </g>
-<g><rect x="418" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="423" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">75</text>
 <text x="423" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Re</text>
 <text x="423" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Rhenium</text>
 </g>
-<g><rect x="483" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="488" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">76</text>
 <text x="488" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Os</text>
 <text x="488" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Osmium</text>
 </g>
-<g><rect x="548" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="553" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">77</text>
 <text x="553" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ir</text>
 <text x="553" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Iridium</text>
 </g>
-<g><rect x="613" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="613" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="618" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">78</text>
 <text x="618" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pt</text>
 <text x="618" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Platinum</text>
 </g>
-<g><rect x="678" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="683" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">79</text>
 <text x="683" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Au</text>
 <text x="683" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Gold</text>
 </g>
-<g><rect x="743" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="437" width="58" height="58" rx="3" fill="#76438c" stroke="#252b33"/>
 <text x="748" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">80</text>
 <text x="748" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Hg</text>
 <text x="748" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Mercury</text>
 </g>
-<g><rect x="808" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="437" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="813" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">81</text>
 <text x="813" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Tl</text>
 <text x="813" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Thallium</text>
 </g>
-<g><rect x="873" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="878" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">82</text>
 <text x="878" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pb</text>
 <text x="878" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Lead</text>
 </g>
-<g><rect x="938" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="437" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="943" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">83</text>
 <text x="943" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Bi</text>
 <text x="943" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Bismuth</text>
 </g>
-<g><rect x="1003" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="437" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1008" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">84</text>
 <text x="1008" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Po</text>
 <text x="1008" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Polonium</text>
 </g>
-<g><rect x="1068" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="437" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">85</text>
 <text x="1073" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">At</text>
 <text x="1073" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Astatine</text>
 </g>
-<g><rect x="1133" y="437" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="437" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="449" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">86</text>
 <text x="1138" y="471" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Rn</text>
 <text x="1138" y="486" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Radon</text>
 </g>
-<g><rect x="28" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="28" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="33" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">87</text>
 <text x="33" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Fr</text>
 <text x="33" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Francium</text>
 </g>
-<g><rect x="93" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="93" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="98" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">88</text>
 <text x="98" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ra</text>
 <text x="98" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Radium</text>
 </g>
-<g><rect x="158" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="158" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="163" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">89</text>
 <text x="163" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ac</text>
 <text x="163" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Actinium</text>
 </g>
-<g><rect x="223" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="228" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">104</text>
 <text x="228" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Rf</text>
 <text x="228" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Rutherfordium</text>
 </g>
-<g><rect x="288" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="293" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">105</text>
 <text x="293" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Db</text>
 <text x="293" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Dubnium</text>
 </g>
-<g><rect x="353" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="358" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">106</text>
 <text x="358" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sg</text>
 <text x="358" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Seaborgium</text>
 </g>
-<g><rect x="418" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="423" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">107</text>
 <text x="423" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Bh</text>
 <text x="423" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Bohrium</text>
 </g>
-<g><rect x="483" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="488" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">108</text>
 <text x="488" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Hs</text>
 <text x="488" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Hassium</text>
 </g>
-<g><rect x="548" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="553" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">109</text>
 <text x="553" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Mt</text>
 <text x="553" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Meitnerium</text>
 </g>
-<g><rect x="613" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="613" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="618" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">110</text>
 <text x="618" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ds</text>
 <text x="618" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Darmstadtium</text>
 </g>
-<g><rect x="678" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="683" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">111</text>
 <text x="683" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Rg</text>
 <text x="683" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Roentgenium</text>
 </g>
-<g><rect x="743" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="748" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">112</text>
 <text x="748" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cn</text>
 <text x="748" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Copernicium</text>
 </g>
-<g><rect x="808" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="813" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">113</text>
 <text x="813" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Nh</text>
 <text x="813" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Nihonium</text>
 </g>
-<g><rect x="873" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="878" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">114</text>
 <text x="878" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Fl</text>
 <text x="878" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Flerovium</text>
 </g>
-<g><rect x="938" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="943" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">115</text>
 <text x="943" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Mc</text>
 <text x="943" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Moscovium</text>
 </g>
-<g><rect x="1003" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1008" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">116</text>
 <text x="1008" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Lv</text>
 <text x="1008" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Livermorium</text>
 </g>
-<g><rect x="1068" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">117</text>
 <text x="1073" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ts</text>
 <text x="1073" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Tennessine</text>
 </g>
-<g><rect x="1133" y="502" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1133" y="502" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1138" y="514" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">118</text>
 <text x="1138" y="536" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Og</text>
 <text x="1138" y="551" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Oganesson</text>
 </g>
-<g><rect x="223" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="228" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">58</text>
 <text x="228" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ce</text>
 <text x="228" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Cerium</text>
 </g>
-<g><rect x="288" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="293" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">59</text>
 <text x="293" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pr</text>
 <text x="293" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Praseodymium</text>
 </g>
-<g><rect x="353" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="358" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">60</text>
 <text x="358" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Nd</text>
 <text x="358" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Neodymium</text>
 </g>
-<g><rect x="418" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="423" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">61</text>
 <text x="423" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pm</text>
 <text x="423" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Promethium</text>
 </g>
-<g><rect x="483" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="488" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">62</text>
 <text x="488" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Sm</text>
 <text x="488" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Samarium</text>
 </g>
-<g><rect x="548" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="553" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">63</text>
 <text x="553" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Eu</text>
 <text x="553" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Europium</text>
 </g>
-<g><rect x="613" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="613" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="618" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">64</text>
 <text x="618" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Gd</text>
 <text x="618" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Gadolinium</text>
 </g>
-<g><rect x="678" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="683" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">65</text>
 <text x="683" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Tb</text>
 <text x="683" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Terbium</text>
 </g>
-<g><rect x="743" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="748" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">66</text>
 <text x="748" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Dy</text>
 <text x="748" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Dysprosium</text>
 </g>
-<g><rect x="808" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="813" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">67</text>
 <text x="813" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Ho</text>
 <text x="813" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Holmium</text>
 </g>
-<g><rect x="873" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="878" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">68</text>
 <text x="878" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Er</text>
 <text x="878" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Erbium</text>
 </g>
-<g><rect x="938" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="943" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">69</text>
 <text x="943" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Tm</text>
 <text x="943" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Thulium</text>
 </g>
-<g><rect x="1003" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1008" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">70</text>
 <text x="1008" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Yb</text>
 <text x="1008" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Ytterbium</text>
 </g>
-<g><rect x="1068" y="632" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="632" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="644" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">71</text>
 <text x="1073" y="666" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Lu</text>
 <text x="1073" y="681" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Lutetium</text>
 </g>
-<g><rect x="223" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="223" y="697" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="228" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">90</text>
 <text x="228" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Th</text>
 <text x="228" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Thorium</text>
 </g>
-<g><rect x="288" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="288" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="293" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">91</text>
 <text x="293" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pa</text>
 <text x="293" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Protactinium</text>
 </g>
-<g><rect x="353" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="353" y="697" width="58" height="58" rx="3" fill="#166599" stroke="#252b33"/>
 <text x="358" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">92</text>
 <text x="358" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">U</text>
 <text x="358" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Uranium</text>
 </g>
-<g><rect x="418" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="418" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="423" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">93</text>
 <text x="423" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Np</text>
 <text x="423" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Neptunium</text>
 </g>
-<g><rect x="483" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="483" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="488" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">94</text>
 <text x="488" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Pu</text>
 <text x="488" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Plutonium</text>
 </g>
-<g><rect x="548" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="548" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="553" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">95</text>
 <text x="553" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Am</text>
 <text x="553" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Americium</text>
 </g>
-<g><rect x="613" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="613" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="618" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">96</text>
 <text x="618" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cm</text>
 <text x="618" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Curium</text>
 </g>
-<g><rect x="678" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="678" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="683" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">97</text>
 <text x="683" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Bk</text>
 <text x="683" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Berkelium</text>
 </g>
-<g><rect x="743" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="743" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="748" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">98</text>
 <text x="748" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Cf</text>
 <text x="748" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Californium</text>
 </g>
-<g><rect x="808" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="808" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="813" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">99</text>
 <text x="813" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Es</text>
 <text x="813" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Einsteinium</text>
 </g>
-<g><rect x="873" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="873" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="878" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">100</text>
 <text x="878" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Fm</text>
 <text x="878" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Fermium</text>
 </g>
-<g><rect x="938" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="938" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="943" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">101</text>
 <text x="943" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Md</text>
 <text x="943" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Mendelevium</text>
 </g>
-<g><rect x="1003" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1003" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1008" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">102</text>
 <text x="1008" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">No</text>
 <text x="1008" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Nobelium</text>
 </g>
-<g><rect x="1068" y="697" width="58" height="58" rx="3" fill="#626b77" stroke="#252b33"/>
+<g><rect x="1068" y="697" width="58" height="58" rx="3" fill="#505965" stroke="#252b33"/>
 <text x="1073" y="709" fill="#ffffff" opacity=".82" font-family="system-ui, sans-serif" font-size="9">103</text>
 <text x="1073" y="731" fill="#ffffff" font-family="system-ui, sans-serif" font-size="19" font-weight="750">Lr</text>
 <text x="1073" y="746" fill="#ffffff" font-family="system-ui, sans-serif" font-size="8">Lawrencium</text>
 </g>
-<text x="28" y="666" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="12">Ni and Al JARVIS-DFT examples are included; each JSON records its source and DWF fallback.</text>
+<text x="28" y="779" fill="#b5bdc8" font-family="system-ui, sans-serif" font-size="12">Ni and Al JARVIS-DFT examples are included; each JSON records its source and DWF fallback.</text>
 </svg>

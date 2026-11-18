@@ -189,7 +189,7 @@ of the OEM cell. In this OEM file, `CrystalData` and `ReflectorData` are packed
 byte arrays, so the file inspection confirms the element, space group, and cell
 but does not independently verify atomic coordinates or the Debye-Waller factor.
 
-![Periodic table showing created crystal files in green and uncreated elements in gray](docs/crystal_periodic_table.svg)
+![Periodic table of bundled inputs: green for crystal structures and elemental SHT masters, blue for elemental SHT masters, purple for compound-only SHT coverage, and gray for no bundled files](docs/crystal_periodic_table.svg)
 
 The Python writer creates EMsoft's `CrystalData` HDF5 group. It currently
 supports standard space-group setting 1, matching the downstream Python crystal
