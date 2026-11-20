@@ -550,8 +550,9 @@ the project's editable HPC environment and scratch-enabled launcher under
 
 Select the ANG and UP1, then assign a local SHT file at the scan voltage to
 each ANG phase ID. For the S11 cobalt scan use phase 1 α-Co and phase 2 β-Co
-at 20 kV. Review the assignments before submitting. Leave the launcher open
-until it reports the job IDs. Every submission creates a new remote scan
+at 20 kV. Review the assignments before submitting. Set the sampling angle, GPUs per phase and hour limit in the GUI, then leave
+the launcher open until it reports the job IDs. Use **Jobs & results** to refresh
+scheduler states, save a receipt and download completed results. Every submission creates a new remote scan
 folder and uploads its inputs. After both full scans finish, the dependent
 merge job writes combined/indexed.ang and combined/phase_scores.h5 there.
 The H5 holds both scores and the winning phase ID in ANG row order. Exact

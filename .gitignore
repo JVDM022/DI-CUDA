@@ -32,3 +32,6 @@ results/
 /tools/prepare_emsoft_cuda.py
 /src/emsoft_di/dynamics.py
 
+
+# React development dependencies (built web-assets are committed)
+node_modules/

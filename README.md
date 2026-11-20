@@ -8,16 +8,21 @@ two-phase comparison using ANG phase assignments and local SHT masters.
 
 - **macOS:** double-click `Kamiak DI.command` in this folder, or open `desktop/Kamiak DI.app` while keeping it in the desktop folder.
 - **Windows:** double-click `Kamiak DI.cmd` in this folder.
-- **From a terminal:** `python3 desktop/kamiak_di.py`.
+- **Development fallback:** `python3 desktop/kamiak_di.py` opens the older Tk GUI.
 
-The source launcher requires Python 3 with Tk and OpenSSH. Authenticate with
-`opkssh login kamiak` first. Kamiak must already have the project's HPC environment
+The React interface opens in a native desktop window. The new Apple-silicon
+Mac build bundles Electron and Python under `dist/native/`; it needs no Terminal,
+browser or separate Python installation. OpenSSH is required. Use **Log in to Kamiak** in the app to authenticate with your configured opkssh
+installation. Kamiak must already have the project's HPC environment
 and scratch-enabled launcher installed under `~/kikuchipyCUDA`.
 
 Enter your Kamiak username, select ANG and UP1 files, assign the SHT master for
-each phase, review NPA and phase settings, and choose **Upload and submit**.
-Keep the app open until it reports job IDs. Monitor completion and retrieve
-results using the [Kamiak guide](docs/HPC_GUIDE.md).
+Phase 1, and optionally add a second master to compare two phases. Leaving
+Phase 2 empty runs a single phase. Review NPA and phase settings, then choose
+**Review & submit**.
+Keep the app open until it reports job IDs. Set the sampling angle, GPU count and hour limit, then monitor jobs and download
+completed results from **Jobs & results**. Save a run receipt to reconnect later.
+See the [Kamiak guide](docs/HPC_GUIDE.md) for cluster details.
 
 See [desktop setup and usage](desktop/README.md) for details.
 

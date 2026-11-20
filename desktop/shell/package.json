@@ -1,0 +1,1 @@
+{"name":"kamiak-di-desktop","version":"0.1.0","private":true,"main":"main.cjs","description":"Kamiak DI desktop interface","author":"Kamiak DI contributors","license":"BSD-3-Clause","devDependencies":{"@electron/packager":"^20.3.0","electron":"^45.4.1"}}

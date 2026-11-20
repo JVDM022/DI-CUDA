@@ -1,8 +1,19 @@
 #!/bin/bash
+# Finder supplies a minimal PATH; prefer a current Python/Tk installation.
+set -u
 cd "$(dirname "$0")" || exit 1
-for python in python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3 "$HOME/miniconda3/bin/python3"; do
-  if "$python" -c 'import tkinter' >/dev/null 2>&1; then
-    exec "$python" kamiak_di.py
-  fi
-done
-echo 'Install Python 3 with Tk support from python.org, then reopen this launcher.'
+unset PYTHONHOME PYTHONPATH
+export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/local/bin:$PATH"
+log="${TMPDIR:-/tmp}/Kamiak-DI-launch.log"
+exec >>"$log" 2>&1
+printf '\nKamiak DI launch: %s\n' "$(date)"
+native="../dist/native/Kamiak DI-darwin-arm64/Kamiak DI.app/Contents/MacOS/Kamiak DI"
+if [[ -x "$native" ]]; then
+  exec "$native"
+fi
+electron="shell/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+if [[ -x "$electron" ]]; then
+  exec "$electron" "$PWD/shell/main.cjs"
+fi
+printf 'Native GUI runtime not found. Use the packaged Kamiak DI app, or install desktop/shell dependencies.\n'
+exit 1
