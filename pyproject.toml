@@ -10,7 +10,6 @@ requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
-app = ["emsoft-di[hpc]", "streamlit>=1.40,<2", "pandas>=2"]
 cuda12 = ["cupy-cuda12x>=13"]
 cuda13 = ["cupy-cuda13x>=14"]
 hpc = [

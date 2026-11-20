@@ -1,5 +1,3 @@
-> **Local app:** [Indexing Studio setup and workflow](../app/README.md) provides input inspection, CPU/CUDA selection, resumable batches, previews and ANG/orix H5 export.
-
 # GPU EBSD dictionary indexing on HPC
 
 Load a bundled SHT master, use an existing HDF5 master, or generate a master from a crystal structure. Project a dictionary and match experimental
