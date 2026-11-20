@@ -541,3 +541,21 @@ python examples/match_synthetic.py --device cpu
 GitHub Actions runs CPU checks. GPU validation requires NVIDIA hardware.
 Experimental data, environments, dictionaries, results and logs are excluded
 through `.gitignore`.
+
+### Desktop submission (macOS and Windows)
+
+Open **desktop/Kamiak DI.app** on macOS (keep it in the desktop folder) or **desktop/Kamiak DI.cmd** on
+Windows from the project checkout. Install Python 3 with Tk, OpenSSH and
+authenticate with `opkssh login kamiak` first. The cluster must already have
+the project's editable HPC environment and scratch-enabled launcher under
+`~/kikuchipyCUDA`.
+
+Select the ANG and UP1, then assign a local SHT file at the scan voltage to
+each ANG phase ID. For the S11 cobalt scan use phase 1 α-Co and phase 2 β-Co
+at 20 kV. Review the assignments before submitting. Leave the launcher open
+until it reports the job IDs. Every submission creates a new remote scan
+folder and uploads its inputs. After both full scans finish, the dependent
+merge job writes combined/indexed.ang and combined/phase_scores.h5 there.
+The H5 holds both scores and the winning phase ID in ANG row order. Exact
+ties and invalid matches are unindexed. Single-phase ANG files can also be
+submitted by clearing **Compare two phases**.
