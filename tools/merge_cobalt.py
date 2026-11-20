@@ -57,7 +57,7 @@ def main(alpha_path, beta_path, output, pair=None):
         for pid, src in enumerate((a, b), 1):
             mask = phase == pid
             data[mask, :3] = src['best_euler_bunge_radians'][:][ix[mask]]
-        data[:, 6] = 0
+        data[:, 6] = np.where(phase > 0, np.fmax(*scores), -1.0)
         phase = np.select([phase == 1, phase == 2], ids, default=-1)
         data[:, 7] = phase
         if data.shape[1] >= 10:
@@ -70,6 +70,7 @@ def main(alpha_path, beta_path, output, pair=None):
                     if not line.startswith('#'):
                         break
                     out.write(line)
+                out.write("# CI = winning DI normalized cross-correlation (NCC); unindexed CI = -1\n")
                 np.savetxt(out, data, fmt=['%.10g']*data.shape[1])
             with h5py.File(ready/'phase_scores.h5', 'w') as out:
                 out.attrs['row_order'] = 'source ANG'

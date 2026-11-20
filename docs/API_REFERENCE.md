@@ -105,9 +105,7 @@ ANG coordinates and the UP1 raster. Validate this acquisition-layout assumption
 for your scan.
 
 `indexed.ang` writes the matched Bunge Euler angles in radians into the source
-ANG row order. Unprocessed or invalid points receive phase index `-1`. NCC
-scores remain in HDF5; the ANG CI and Fit columns are set to `0` and `-1` because
-the matcher does not calculate those EDAX metrics.
+ANG row order. Unprocessed or invalid points receive phase index `-1`. The ANG CI column stores the winning DI normalized cross-correlation score for single-phase and merged maps. Unindexed or unprocessed rows have CI = -1. Fit remains -1. Interpret CI thresholds as NCC thresholds, not EDAX confidence values.
 
 After reviewing pilot scores, geometry and orientations, a full scan can be
 requested explicitly:

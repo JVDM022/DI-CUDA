@@ -50,10 +50,11 @@ def submit(user, files, ids, npa, log):
     folder = 'kikuchipyCUDA/scans/di-' + uuid.uuid4().hex[:12]
     remote = ['ssh', '-o', 'BatchMode=yes', host]
     def run(args, **kwargs):
-        result = subprocess.run(args, text=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, **kwargs)
-        if result.stdout.strip():
-            log(result.stdout.strip())
+        result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), **kwargs)
+        output = result.stdout.decode("utf-8", errors="replace").strip()
+        if output:
+            log(output)
         if result.returncode:
             raise RuntimeError(f'{args[0]} exited with status {result.returncode}')
     run(remote + [f'mkdir -p {folder}'])
@@ -62,7 +63,7 @@ def submit(user, files, ids, npa, log):
         log(f'Uploading {source.name} as {name} …')
         run(['scp', '-B', str(source), f'{host}:{folder}/{name}'])
         run(remote + [f'test "$(stat -c %s {folder}/{name})" = {source.stat().st_size}'])
-    run(remote + [f'bash -s -- {folder}'], input=batch_script(len(ids), ids, npa))
+    run(remote + [f'bash -s -- {folder}'], input=batch_script(len(ids), ids, npa).encode("utf-8"))
 
 
 def main():

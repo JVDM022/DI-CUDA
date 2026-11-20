@@ -106,7 +106,7 @@ class HPCTests(unittest.TestCase):
             np.testing.assert_array_equal(exported[2,:3], eulers[1])
             self.assertEqual(exported[0,7], 0)
             self.assertEqual(exported[1,7], -1)
-            self.assertEqual(exported[0,6], 0)
+            np.testing.assert_allclose(exported[:,6], [1, -1, .9, .9, .9])
             self.assertEqual(exported[0,9], -1)
             with self.assertRaises(FileExistsError):
                 merge(args,2,6,dict(dictionary_count=2,run_id='test'),dict(XSTEP=1,YSTEP=1))
