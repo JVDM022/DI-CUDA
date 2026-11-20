@@ -17,7 +17,7 @@ local Indexing Studio app.
 | Folder / file | Contents |
 | --- | --- |
 | `Start Indexing Studio.command` | Double-click launcher for the local app on macOS |
-| [app/](app/README.md) | Local app, demo generator, setup and workflow instructions |
+| [app/](app/README.md) | Local app, setup and workflow instructions |
 | [desktop/](desktop/README.md) | Existing Kamiak desktop launchers and submission helpers |
 | [examples/](examples/README.md) | Example images, crystal inputs and synthetic matching example |
 | [docs/](docs/README.md) | Detailed HPC guide, API reference and reference figures |
@@ -35,6 +35,6 @@ Use a dedicated run folder for each indexing configuration. Experimental inputs,
 dictionaries and generated results are excluded from Git. Keep source inputs
 separate from generated results.
 
-The local app was checked on CPU with synthetic Ni data. See the app guide for
+The local app has CPU workflow and UI checks. See the app guide for
 validation details and limitations; experimental accuracy and Windows/CUDA
 execution have not been established by those checks.

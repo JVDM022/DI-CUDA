@@ -120,24 +120,8 @@ The SHT reader and database were already present; the decoder was compiled into
 the isolated environment. Dependencies were installed from the Python package
 registry, retaining the project's pinned kikuchipy version.
 
-## Guided Ni demo and validation results
+## Validation results
 
-With the environment active, from the repository root:
-
-```bash
-python app/create_demo.py /tmp/my-ni-demo
-```
-
-Use `/tmp/my-ni-demo/scan.up1`, `/tmp/my-ni-demo/scan.ang`, and
-`/tmp/my-ni-demo/Ni-demo-master.h5`. Set sampling 30°, binning 1, sigma 0 and limit
-0; choose `/tmp/my-ni-demo/result` as the run folder. These are four synthetic
-patterns projected from the bundled Ni 20 kV SHT master, with saved ground-truth
-quaternions. The master H5 is explicitly the project-native reconstructed schema,
-not a simulated EMsoft master with invented provenance.
-
-On the development Mac, the full demo recovered all four known dictionary
-orientations (quaternion agreement within 1e-5) and mean NCC rounded to 1.000.
-This is a self-consistency test, not validation on acquired EBSD data.
 The completed-results UI rendered with metrics and pattern preview. Six new
 workflow/UI tests passed; the existing unittest suite passed 29 tests with one
 CUDA test skipped. NVIDIA execution and real UP1/ANG/EMsoft Ni H5 inputs were not
